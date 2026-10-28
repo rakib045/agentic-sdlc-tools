@@ -3,9 +3,9 @@
 Agentic AI SDLC kit — agents, skills, rules and slash commands with multi-tool support.
 
 - **Agents (SDLC):** product-owner, solution-architect, senior-developer, qa-engineer, devops-engineer, security-reviewer, code-reviewer
-- **Commands:** `/spec` `/plan` `/build` `/test` `/code-review` `/deploy` (prompt template + CLI validation via `doctor`)
-- **Rules:** global language-agnostic standards
-- **Skills:** adr-writing, conventional-commits, review-checklist
+- **Commands:** `/spec` `/plan` `/build` `/test` `/code-review` `/deploy` (prompt template + CLI validation via `doctor`). `/build auto` runs the approved plan task by task.
+- **Rules:** global language-agnostic standards (assumptions, definition of done, skill routing)
+- **Skills:** lifecycle workflows adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT), plus adr-writing, conventional-commits, and review-checklist. Run `list` for every name.
 - **Tools:** Claude Code, OpenCode, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor — from a single source (`agents/`, `commands/`, `rules/`, `skills/` at the repo root) adapted per tool
 
 Requires Node.js >= 20 in the target project environment.
@@ -73,7 +73,7 @@ npx @rakib045/agentic-sdlc-tools doctor           # validate spec/plan/test arti
 /spec -> /plan -> /build -> /test -> /code-review -> /deploy
 ```
 
-Each command file is a prompt template for the AI; `doctor` is the executable check (spec/plan/test artifacts + kit installation).
+Each command file is a prompt template for the AI; `doctor` is the executable check (spec/plan/test artifacts + kit installation). Commands invoke skills; personas do not invoke other personas. `/deploy` is the parallel review fan-out (code review, security, QA) before a go/no-go.
 
 ## Repo layout (contributing)
 
