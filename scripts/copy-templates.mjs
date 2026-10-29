@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,7 +17,6 @@ for (const cat of categories) {
   }
 }
 if (copied.length > 0) {
-  copyFileSync(join(root, "package.json"), join(dest, "_package.json"));
   console.log(`templates copied: ${copied.join(", ")} -> dist/templates`);
 } else {
   console.warn("no category folders found, skipping template copy");

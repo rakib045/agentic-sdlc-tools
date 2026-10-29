@@ -1,8 +1,14 @@
+---
+description: Writes failing tests first, applies the Prove-It pattern to bugs, or assesses coverage gaps. Use when adding behavior, fixing a bug, or checking test quality.
+agent: qa-engineer
+subagent: false
+---
+
 # /test — Prove It Works
 
 Invoke `test-driven-development`. For a bug, use the Prove-It pattern. If the failure is not understood, invoke `debugging-and-error-recovery` before changing production code. For browser behavior, also invoke `browser-testing-with-devtools`.
 
-Act as QA Engineer. This command runs the test workflow in the main session. It does not spawn other personas.
+This command runs the test workflow in the main session. It does not spawn other personas.
 
 ## New behavior
 

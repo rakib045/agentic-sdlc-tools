@@ -4,6 +4,8 @@ node_modules/
 .opencode/
 .claude/
 .codex/
+.agents/
+.cursor/
 .gemini/
 *.bak
-*.tmp/
+*.tmp

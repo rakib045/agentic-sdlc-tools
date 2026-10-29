@@ -1,8 +1,14 @@
+---
+description: Turns an approved SPEC.md into an ordered, verifiable task plan in PLAN.md without writing product code. Use after a spec is approved and before building.
+agent: solution-architect
+subagent: false
+---
+
 # /plan — Plan the Implementation
 
 Invoke `planning-and-task-breakdown`. Use `api-and-interface-design` for contracts and `adr-writing` for expensive-to-reverse decisions. If no quality bar is written down and the work is non-trivial, invoke `constraint-driven-development` before autonomous build.
 
-Act as Solution Architect. This command is read-only. Do not write product code.
+This command is read-only. Do not write product code.
 
 ## Steps
 

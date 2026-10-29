@@ -21,9 +21,9 @@ const ADAPTERS: ToolAdapter[] = [
 
 export type ToolId = string;
 
-const byId = new Map(ADAPTERS.map((a) => [a.id, a]));
+const byId = new Map(ADAPTERS.map((adapter) => [adapter.id, adapter]));
 
-export const ALL_TOOL_IDS: string[] = ADAPTERS.map((a) => a.id);
+export const ALL_TOOL_IDS: string[] = ADAPTERS.map((adapter) => adapter.id);
 
 export function getAdapter(id: string): ToolAdapter {
   const adapter = byId.get(id);

@@ -1,8 +1,14 @@
+---
+description: Writes or updates SPEC.md with user stories, acceptance criteria, and boundaries, then stops for approval. Use when requirements are new or unclear and no approved spec exists.
+agent: product-owner
+subagent: false
+---
+
 # /spec — Write a Specification
 
 Invoke `spec-driven-development`. If the ask is missing who, why, success, or the binding constraint, invoke `interview-me` first. If the idea is still a rough concept, invoke `idea-refine` before writing the spec.
 
-Act as Product Owner. Do not implement. Do not start planning in this turn.
+Do not implement. Do not start planning in this turn.
 
 ## Steps
 

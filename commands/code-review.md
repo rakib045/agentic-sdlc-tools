@@ -1,3 +1,9 @@
+---
+description: Reviews the current diff on five axes and returns a severity-labeled verdict. Use before merging a change or when asked to review a diff or PR.
+agent: code-reviewer
+subagent: false
+---
+
 # /code-review — Review the Change
 
 Invoke `code-review-and-quality` in this session. Also invoke `security-and-hardening` on the security axis and `performance-optimization` on the performance axis. If the change works but is harder to maintain than it should be, invoke `code-simplification` after the verdict, in a separate pass that preserves behavior.

@@ -1,12 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export type Category = "agents" | "commands" | "skills" | "rules";
 
-export const CATEGORIES: Category[] = ["agents", "commands", "skills", "rules"];
+const CATEGORY_LIST: Category[] = ["agents", "commands", "skills", "rules"];
 
-/** Walk up to the package root (dir containing package.json). */
 function packageRoot(from: string): string | null {
   let dir = from;
   for (let i = 0; i < 6; i++) {
@@ -18,43 +17,46 @@ function packageRoot(from: string): string | null {
   return null;
 }
 
-/** Resolve templates dir: published (dist/templates) or dev (root-level category folders). */
+/** Published layout: categories under dist/templates. Dev layout: categories at the package root. */
 export function templatesDir(): string {
-  const here = dirname(fileURLToPath(import.meta.url)); // dist/ or src/lib
-  // Published layout first: categories under dist/templates.
-  for (const c of [join(here, "templates"), join(here, "..", "templates")]) {
-    if (existsSync(join(c, "agents"))) return c;
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const candidate of [join(here, "templates"), join(here, "..", "templates")]) {
+    if (existsSync(join(candidate, "agents"))) return candidate;
   }
-  // Dev layout: agents/, commands/, rules/, skills/ at the package root.
-  const root = packageRoot(here) ?? process.cwd();
-  if (existsSync(join(root, "agents"))) return root;
-  // Legacy fallback: categories under skills/.
-  const legacy = join(root, "skills");
-  if (existsSync(join(legacy, "agents"))) return legacy;
-  // default to dist/templates even if missing (error surfaces later)
+  const root = packageRoot(here);
+  if (root && existsSync(join(root, "agents"))) return root;
   return join(here, "templates");
+}
+
+/** Skills are directories (`skills/<id>/SKILL.md`); other categories are `<category>/<id>.md`. */
+function itemPath(category: Category, name: string): string {
+  const dir = join(templatesDir(), category);
+  return category === "skills" ? join(dir, name, "SKILL.md") : join(dir, `${name}.md`);
 }
 
 export function listItems(category: Category): string[] {
   const dir = join(templatesDir(), category);
   if (!existsSync(dir)) return [];
+  if (category === "skills") {
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(join(dir, entry.name, "SKILL.md")))
+      .map((entry) => entry.name)
+      .sort();
+  }
   return readdirSync(dir)
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => f.replace(/\.md$/, ""))
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => file.slice(0, -".md".length))
     .sort();
 }
 
 export function readItem(category: Category, name: string): string {
-  const file = join(templatesDir(), category, `${name}.md`);
-  if (!existsSync(file)) throw new Error(`Unknown ${category.slice(0, -1)}: "${name}". File not found: ${category}/${name}.md`);
+  const file = itemPath(category, name);
+  if (!existsSync(file)) {
+    throw new Error(`Unknown ${category.slice(0, -1)} "${name}": ${relative(templatesDir(), file)} not found`);
+  }
   return readFileSync(file, "utf8");
 }
 
 export function manifest(): Record<Category, string[]> {
-  return {
-    agents: listItems("agents"),
-    commands: listItems("commands"),
-    skills: listItems("skills"),
-    rules: listItems("rules"),
-  };
+  return Object.fromEntries(CATEGORY_LIST.map((category) => [category, listItems(category)])) as Record<Category, string[]>;
 }

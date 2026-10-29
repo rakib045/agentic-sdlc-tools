@@ -1,6 +1,12 @@
+---
+description: Runs parallel review, a go/no-go decision, and a versioned release with a rollback plan. Use before shipping to production or cutting a release.
+agent: devops-engineer
+subagent: false
+---
+
 # /deploy — Release Safely
 
-Invoke `shipping-and-launch`. This command is the launch orchestrator: parallel review, then a go/no-go, then the release steps. Personas do not call each other. You merge their reports.
+Invoke `shipping-and-launch`. This command is the launch orchestrator: parallel review, then a go/no-go, then the release steps. The reviewers are launched by this command, not by each other. You merge their reports.
 
 Skip the fan-out only when all of these are true: 2 files or fewer, under 50 changed lines, and no auth, payments, data access, or config/env. Otherwise fan out.
 

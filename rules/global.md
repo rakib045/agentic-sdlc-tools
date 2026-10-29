@@ -78,7 +78,16 @@ These are incorrect. Ignore them.
 
 ## Composition
 
-Personas do not invoke other personas. The user or a slash command orchestrates. A persona may load skills. Parallel review belongs to `/deploy`, not to a reviewer calling another reviewer.
+Personas do not invoke other personas. The user or a slash command orchestrates. A persona may load skills. Parallel review belongs to `/deploy`, which launches the reviewers itself.
+
+## Severity
+
+Every persona, command, and review uses these labels:
+
+- **Critical**: blocks merge or release. Vulnerability, data loss, broken behavior.
+- **Required**: must fix before merge. Missing test, wrong boundary, poor errors, exploitable issue with conditions.
+- **Optional**: worth doing, not required.
+- **Nit**: author may ignore. Style or naming preference.
 
 ## Baseline
 

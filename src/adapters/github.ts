@@ -1,38 +1,51 @@
-import type { Category } from "../lib/manifest.js";
-import { buildFrontmatter, titleCase } from "../lib/frontmatter.js";
+import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
+import { markdown } from "../lib/render.js";
+import { capability, skillFile, withPersona } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
- * GitHub Copilot adapter. Slash commands become `*.prompt.md` prompt files
- * (Copilot only registers the `.prompt.md` extension) with `mode: agent`
- * frontmatter; agents/skills/rules use plain markdown.
+ * GitHub Copilot: custom agents as .github/agents/<id>.agent.md with tool aliases.
+ * Copilot CLI runs skills, not prompt files, so commands become user-invocable-only skills
+ * (disable-model-invocation). Skills live in .github/skills/<id>/SKILL.md.
  */
 export const githubAdapter: ToolAdapter = {
   id: "github",
   label: "GitHub Copilot",
-
-  target(category: Category, name: string): string {
+  render(category, name) {
     switch (category) {
-      case "agents":
-        return `.github/agents/${name}.md`;
-      case "commands":
-        return `.github/prompts/${name}.prompt.md`;
-      case "skills":
-        return `.github/skills/${name}.md`;
+      case "agents": {
+        const agent = loadAgent(name);
+        const tools = [
+          "read",
+          "search",
+          ...(capability(agent.permissions, "edit") !== "deny" ? ["edit"] : []),
+          ...(capability(agent.permissions, "shell") !== "deny" ? ["execute"] : []),
+          ...(capability(agent.permissions, "subagent") !== "deny" ? ["agent"] : []),
+        ];
+        return [
+          {
+            path: `.github/agents/${name}.agent.md`,
+            kind: "markdown",
+            content: markdown({ name, description: agent.description, tools, model: agent.models.github }, agent.body),
+          },
+        ];
+      }
+      case "commands": {
+        const command = loadCommand(name);
+        return [
+          skillFile(".github/skills", name, command.description, withPersona(command.agent, command.body), {
+            "disable-model-invocation": true,
+          }),
+        ];
+      }
+      case "skills": {
+        const skill = loadSkill(name);
+        return [skillFile(".github/skills", name, skill.description, skill.body)];
+      }
       case "rules":
-        return ".github/copilot-instructions.md";
+        return [{ path: ".github/copilot-instructions.md", kind: "markdown", content: markdown({}, loadRule(name)) }];
     }
   },
-
-  frontmatter(category: Category, name: string): string | null {
-    if (category === "commands") {
-      return buildFrontmatter({ description: titleCase(name), mode: "agent" });
-    }
-    return null;
-  },
-
   doctorPaths: () => [".github/copilot-instructions.md"],
-
-  describe: () =>
-    "github: agents=.github/agents commands=.github/prompts (*.prompt.md) skills=.github/skills rules=.github/copilot-instructions.md",
+  describe: () => "github: agents=.github/agents (*.agent.md) commands=.github/skills (invocation off) skills=.github/skills/<id>/SKILL.md rules=.github/copilot-instructions.md",
 };

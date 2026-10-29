@@ -1,8 +1,12 @@
+---
+description: Implements the next pending task from PLAN.md test-first, or runs every task with /build auto after one approval. Use when a spec and plan exist and code should be written.
+agent: senior-developer
+subagent: false
+---
+
 # /build — Implement the Plan
 
 Invoke `incremental-implementation` and `test-driven-development`. On failure, invoke `debugging-and-error-recovery`. On auth, migrations, payments, deletions, or anything you cannot undo with revert, invoke `doubt-driven-development` and get explicit sign-off.
-
-Act as Senior Developer.
 
 ## Modes
 
