@@ -6,7 +6,7 @@ import { VERSION } from "./version.js";
 import { doctor, install, kitItems, listLines, update, type Report } from "./commands.js";
 import { parseLevel, readItem, TOKEN_LEVELS, type Category, type TokenLevel } from "./lib/manifest.js";
 
-const LEVEL_OPTION = `Token efficiency: ${TOKEN_LEVELS.join("|")} (default: default). low = smallest set, high = full detail`;
+const LEVEL_OPTION = `Instruction level: ${TOKEN_LEVELS.join("|")} (default: default). low = smallest set, high = full detail`;
 
 const program = new Command();
 program
@@ -54,7 +54,7 @@ program
   .option("--force", "Overwrite existing files (backs up to *.bak)")
   .option("--dry-run", "Show what would be installed without writing")
   .option("--yes", "Non-interactive (assume defaults)")
-  .option("--token-efficiency <level>", LEVEL_OPTION)
+  .option("--instruction-level <level>", LEVEL_OPTION)
   .action(
     run(
       async (opts: {
@@ -63,15 +63,15 @@ program
         force?: boolean;
         dryRun?: boolean;
         yes?: boolean;
-        tokenEfficiency?: string;
+        instructionLevel?: string;
       }) => {
         const tools = parseTools(opts.tools);
-        const level = parseLevel(opts.tokenEfficiency);
+        const level = parseLevel(opts.instructionLevel);
         const items = kitItems(opts.preset === "minimal" ? "minimal" : "full", level);
         if (!opts.yes && !opts.dryRun) {
           const byCategory = (category: Category) => items.filter((i) => i.category === category).map((i) => i.name);
           console.log(`Will install to: ${tools.map((t) => getAdapter(t).label).join(", ")}`);
-          console.log(`  token efficiency: ${level}`);
+          console.log(`  instruction level: ${level}`);
           console.log(`  agents: ${byCategory("agents").join(", ") || "(none)"}`);
           console.log(`  commands: ${byCategory("commands").join(", ") || "(none)"}`);
           console.log(`  skills: ${byCategory("skills").length} skills`);
@@ -92,15 +92,15 @@ program
   .option("--tools <list>", `Comma list: ${ALL_TOOL_IDS.join(",")} (default: all)`)
   .option("--force", "Overwrite existing files (backs up to *.bak)")
   .option("--dry-run", "Show what would be installed without writing")
-  .option("--token-efficiency <level>", LEVEL_OPTION)
+  .option("--instruction-level <level>", LEVEL_OPTION)
   .action(
     run(
-      async (spec: string, opts: { tools?: string; force?: boolean; dryRun?: boolean; tokenEfficiency?: string }) => {
+      async (spec: string, opts: { tools?: string; force?: boolean; dryRun?: boolean; instructionLevel?: string }) => {
         const match = spec.match(/^(agent|command|skill|rule):([\w-]+)$/);
         if (!match) throw new Error(`Bad spec "${spec}". Use <type>:<name>, e.g. agent:orchestrator`);
         const category = `${match[1]}s` as Category;
         const name = match[2];
-        const level = parseLevel(opts.tokenEfficiency);
+        const level = parseLevel(opts.instructionLevel);
         readItem(category, name, level);
         const tools = parseTools(opts.tools);
         printReport(install(process.cwd(), [{ category, name }], tools, { ...opts, level }), Boolean(opts.dryRun), true);
@@ -112,9 +112,9 @@ program
   .command("list")
   .description("List available agents, commands, skills, rules")
   .option("--tools", "Also show tool target paths")
-  .option("--token-efficiency <level>", LEVEL_OPTION)
-  .action((opts: { tools?: boolean; tokenEfficiency?: string }) => {
-    console.log(listLines(Boolean(opts.tools), parseLevel(opts.tokenEfficiency)).join("\n"));
+  .option("--instruction-level <level>", LEVEL_OPTION)
+  .action((opts: { tools?: boolean; instructionLevel?: string }) => {
+    console.log(listLines(Boolean(opts.tools), parseLevel(opts.instructionLevel)).join("\n"));
   });
 
 program
@@ -134,7 +134,7 @@ program
   .option("--check", "Only report what would change")
   .option("--diff", "Show per-file status without writing")
   .option("--force", "Apply updates (backs up to *.bak)")
-  .option("--token-efficiency <level>", `${LEVEL_OPTION}. Use the level you installed with`)
+  .option("--instruction-level <level>", `${LEVEL_OPTION}. Use the level you installed with`)
   .action(
     run(
       async (opts: {
@@ -142,10 +142,10 @@ program
         check?: boolean;
         diff?: boolean;
         force?: boolean;
-        tokenEfficiency?: string;
+        instructionLevel?: string;
       }) => {
       const tools = parseTools(opts.tools);
-      const level: TokenLevel = parseLevel(opts.tokenEfficiency);
+      const level: TokenLevel = parseLevel(opts.instructionLevel);
       const dryRun = Boolean(opts.check || opts.diff || !opts.force);
       if (dryRun && !opts.check && !opts.diff) {
         console.log("Dry run (no --force): showing what would change. Re-run with --force to apply.");

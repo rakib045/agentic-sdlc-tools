@@ -379,14 +379,14 @@ describe("install, update, and doctor", () => {
   });
 });
 
-describe("token-efficiency levels", () => {
+describe("instruction levels", () => {
   const levelFiles = (level: TokenLevel) => planFiles(kitItems("full", level), ["claude"], level);
 
   it("parses the level, defaults to default, and rejects unknown values", () => {
     expect(parseLevel(undefined)).toBe("default");
     expect(parseLevel("low")).toBe("low");
     expect(parseLevel("high")).toBe("high");
-    expect(() => parseLevel("medium")).toThrow(/Unknown token-efficiency/);
+    expect(() => parseLevel("medium")).toThrow(/Unknown instruction level/);
   });
 
   it("ships the same agents, commands, and rules at every level, and fewer skills at low", () => {

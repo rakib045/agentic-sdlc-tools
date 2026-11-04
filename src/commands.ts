@@ -14,7 +14,7 @@ export interface Item {
 export interface Options {
   force?: boolean;
   dryRun?: boolean;
-  /** Token-efficiency level of the templates to install. Defaults to "default". */
+  /** Instruction level of the templates to install. Defaults to "default". */
   level?: TokenLevel;
 }
 
@@ -38,7 +38,7 @@ function emptyReport(): Report {
 
 /**
  * Full kit, or the minimal preset: the core SDLC commands plus every agent and skill they need.
- * Only templates that exist at the chosen token-efficiency level are included.
+ * Only templates that exist at the chosen instruction level are included.
  */
 export function kitItems(preset: "full" | "minimal" = "full", level: TokenLevel = "default"): Item[] {
   const all = manifest(level);

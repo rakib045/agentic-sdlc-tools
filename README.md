@@ -17,6 +17,7 @@ From your project folder, preview the files for the assistant you use, then inst
 ```sh
 npx @rakib045/agentic-sdlc-tools init --tools claude --dry-run
 npx @rakib045/agentic-sdlc-tools init --tools claude --yes
+add npx @rakib045/agentic-sdlc-tools init --instruction-level low --tools claude
 ```
 
 Replace `claude` with `opencode`, `codex`, `gemini`, `github`, or `cursor`. To install for more than one assistant, use a comma-separated list such as `--tools claude,opencode`. After installing, reopen the project in your assistant and follow the [tool-specific start steps](#start-the-kit-in-your-assistant) below.
@@ -40,15 +41,15 @@ PASS kit: installed for [claude]
 
 > The package is scoped, so use the full name with `npx`. The bare `npx agentic-sdlc-tools` does not resolve.
 
-## Choose a token-efficiency level
+## Choose an instruction level
 
-Every agent, command, skill, and rule comes in three versions. Pick one with `--token-efficiency`:
+Every agent, command, skill, and rule comes in three versions. Pick one with `--instruction-level`:
 
 | Level | Flag | Template set* | Instructions | Approx. source size vs. high |
 |---|---|---|---|---|
-| **low** | `--token-efficiency low` | 9 agents, 6 commands, 14 skills, 1 rule (30 templates) | Shortest. Only the essentials. Agents load fewer skills. | ~30% of high |
-| **default** | no flag, or `--token-efficiency default` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Balanced. Every workflow, trimmed for everyday use. | ~67% of high |
-| **high** | `--token-efficiency high` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Full detail, the complete original instructions. | 100% |
+| **low** | `--instruction-level low` | 9 agents, 6 commands, 14 skills, 1 rule (30 templates) | Shortest. Only the essentials. Agents load fewer skills. | ~30% of high |
+| **default** | no flag, or `--instruction-level default` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Balanced. Every workflow, trimmed for everyday use. | ~67% of high |
+| **high** | `--instruction-level high` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Full detail, the complete original instructions. | 100% |
 
 \* Template counts describe the source set, not the number of generated files across all selected tools; some tools render a template into multiple files. Source sizes compare UTF-8 template bytes with `high`; they are not token counts or guaranteed billing savings. Skills can load on demand, so actual context use depends on your assistant and how you use the kit. Choose **low** for shorter instructions, **default** for everyday use, and **high** for the fullest guidance.
 
@@ -61,7 +62,7 @@ Files are installed under their normal names. The levels differ only in the temp
 To switch levels in a project you already set up, add `--force`. The original files are kept as `*.bak`:
 
 ```sh
-npx @rakib045/agentic-sdlc-tools init --token-efficiency low --force
+npx @rakib045/agentic-sdlc-tools init --instruction-level low --force
 ```
 
 ## Your team
@@ -155,7 +156,7 @@ If your assistant does not detect newly added files immediately, reopen the proj
 npx @rakib045/agentic-sdlc-tools init
 
 # the smallest kit, for every tool
-npx @rakib045/agentic-sdlc-tools init --token-efficiency low --yes
+npx @rakib045/agentic-sdlc-tools init --instruction-level low --yes
 
 # only some tools, no prompts
 npx @rakib045/agentic-sdlc-tools init --tools claude,opencode --yes
@@ -164,7 +165,7 @@ npx @rakib045/agentic-sdlc-tools init --tools claude,opencode --yes
 npx @rakib045/agentic-sdlc-tools init --preset minimal --yes
 
 # the full, detailed instructions
-npx @rakib045/agentic-sdlc-tools init --token-efficiency high --yes
+npx @rakib045/agentic-sdlc-tools init --instruction-level high --yes
 
 # preview what would be written, without writing anything
 npx @rakib045/agentic-sdlc-tools init --dry-run
@@ -177,13 +178,13 @@ Valid levels: `low`, `default`, `high`. Any other value is rejected with an erro
 
 ```sh
 npx @rakib045/agentic-sdlc-tools list                          # every name, at the default level
-npx @rakib045/agentic-sdlc-tools list --token-efficiency low   # the names available at the low level
+npx @rakib045/agentic-sdlc-tools list --instruction-level low   # the names available at the low level
 npx @rakib045/agentic-sdlc-tools list --tools                  # where each tool reads its files
 
 npx @rakib045/agentic-sdlc-tools add agent:orchestrator --tools claude,github
-npx @rakib045/agentic-sdlc-tools add command:spec --tools opencode --token-efficiency low
+npx @rakib045/agentic-sdlc-tools add command:spec --tools opencode --instruction-level low
 npx @rakib045/agentic-sdlc-tools add skill:adr-writing
-npx @rakib045/agentic-sdlc-tools add rule:global --tools cursor --token-efficiency high
+npx @rakib045/agentic-sdlc-tools add rule:global --tools cursor --instruction-level high
 ```
 
 Names use the form `<type>:<name>`, where type is `agent`, `command`, `skill`, or `rule`.
@@ -194,7 +195,7 @@ Names use the form `<type>:<name>`, where type is `agent`, `command`, `skill`, o
 npx @rakib045/agentic-sdlc-tools update --check                    # report what would change
 npx @rakib045/agentic-sdlc-tools update --diff                     # the same, file by file
 npx @rakib045/agentic-sdlc-tools update --force                    # apply the updates
-npx @rakib045/agentic-sdlc-tools update --token-efficiency low --force   # refresh a low install
+npx @rakib045/agentic-sdlc-tools update --instruction-level low --force   # refresh a low install
 npx @rakib045/agentic-sdlc-tools doctor                            # check spec, plan, test setup, and the install
 ```
 
@@ -249,7 +250,7 @@ Permissions control what each agent can do. The orchestrator can delegate to eve
 ```
 agents/ commands/ rules/ skills/   # single source of truth: edit these
 src/                               # TypeScript CLI and one adapter per tool
-src/lib/manifest.ts                # token-efficiency levels and template lookup
+src/lib/manifest.ts                # instruction levels and template lookup
 src/lib/source.ts                  # reads template frontmatter (icon, model, skills, permissions)
 scripts/copy-templates.mjs         # copies the templates into dist/ on build
 tests/                             # vitest

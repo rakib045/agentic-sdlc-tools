@@ -5,7 +5,7 @@ export type { RenderedFile } from "../lib/render.js";
 
 /**
  * One target harness. Templates stay tool-agnostic in agents/ commands/ rules/ skills/;
- * `render` turns one template at one token-efficiency level into the files this harness reads.
+ * `render` turns one template at one instruction level into the files this harness reads.
  */
 export interface ToolAdapter {
   readonly id: string;

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 export type Category = "agents" | "commands" | "skills" | "rules";
 
 /**
- * Token-efficiency level. Each template exists in up to three versions:
+ * Instruction level. Each template exists in up to three versions:
  * `name.md.low`, `name.md` (default), and `name.md.high`. The installer writes the
  * chosen version under the plain name, so the suffix is dropped on install.
  */
@@ -20,7 +20,7 @@ const SUFFIX: Record<TokenLevel, string> = { low: ".low", default: "", high: ".h
 export function parseLevel(value: string | undefined): TokenLevel {
   if (value === undefined) return "default";
   if ((TOKEN_LEVELS as string[]).includes(value)) return value as TokenLevel;
-  throw new Error(`Unknown token-efficiency "${value}". Use one of: ${TOKEN_LEVELS.join(", ")}.`);
+  throw new Error(`Unknown instruction level "${value}". Use one of: ${TOKEN_LEVELS.join(", ")}.`);
 }
 
 function packageRoot(from: string): string | null {
@@ -73,7 +73,7 @@ export function readItem(category: Category, name: string, level: TokenLevel = "
   const file = itemPath(category, name, level);
   if (!existsSync(file)) {
     throw new Error(
-      `Unknown ${category.slice(0, -1)} "${name}" at token-efficiency "${level}": ${relative(templatesDir(), file)} not found`,
+      `Unknown ${category.slice(0, -1)} "${name}" at instruction level "${level}": ${relative(templatesDir(), file)} not found`,
     );
   }
   return readFileSync(file, "utf8");
