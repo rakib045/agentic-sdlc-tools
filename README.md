@@ -17,7 +17,7 @@ From your project folder, preview the files for the assistant you use, then inst
 ```sh
 npx @rakib045/agentic-sdlc-tools init --tools claude --dry-run
 npx @rakib045/agentic-sdlc-tools init --tools claude --yes
-npx @rakib045/agentic-sdlc-tools init --instruction-level low --tools claude
+npx @rakib045/agentic-sdlc-tools init --tools claude --instruction-level low 
 ```
 
 Replace `claude` with `opencode`, `codex`, `gemini`, `github`, or `cursor`. To install for more than one assistant, use a comma-separated list such as `--tools claude,opencode`. After installing, reopen the project in your assistant and follow the [tool-specific start steps](#start-the-kit-in-your-assistant) below.
