@@ -1,0 +1,21 @@
+---
+description: Turns an approved SPEC.md into an ordered, verifiable task plan in PLAN.md without writing product code. Use after a spec is approved and before building.
+agent: solution-architect
+subagent: false
+---
+
+# /plan — Plan the Implementation
+
+Invoke `planning-and-task-breakdown`.
+
+1. Read `SPEC.md`. If missing, stop and tell the user to run `/spec`.
+2. Read the relevant code. Note risks and unknowns.
+3. Recommend the simplest approach that meets the spec.
+4. Slice into vertical tasks, each with acceptance criteria and size (S or M).
+5. Save `PLAN.md`. Present it for review. Do not start `/build`.
+6. Run `agentic-sdlc-tools doctor`. `plan` should PASS.
+
+## Rules
+
+- Read-only. Do not write product code.
+- Flag unknowns. Do not hide risk.

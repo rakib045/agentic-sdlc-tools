@@ -5,49 +5,36 @@ description: "Localizes and fixes failing tests, broken builds, wrong runtime be
 
 # Debugging and Error Recovery
 
-Stop adding features. Preserve evidence. Find the root cause, fix it, and guard it. Guessing wastes time. Adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT).
+Stop adding features. Find the root cause, fix it, and guard it. Guessing wastes time.
 
 ## When to use
 
-A test fails, the build breaks, runtime behavior is wrong, a bug is reported, or something that worked yesterday stopped.
+A test fails, the build breaks, runtime behavior is wrong, or a bug is reported.
 
 ## Stop the line
 
 1. Stop adding features or further edits.
-2. Preserve the error output, logs, and repro steps.
-3. Diagnose with the checklist below. Do not skip steps.
-4. Fix the root cause.
-5. Guard with a test (`test-driven-development` Prove-It).
-6. Resume only after verification passes.
-
-Do not push past a red suite to start the next task.
+2. Preserve the error output and repro steps.
+3. Diagnose with the triage below.
+4. Fix the root cause, then guard it with a test (`test-driven-development`).
+5. Resume only after verification passes. Do not push past a red suite.
 
 ## Triage
 
-1. **Reproduce.** If you cannot make it fail on demand, you cannot be sure you fixed it. Check timing, environment, and leaked state before calling it random. Document non-reproducible conditions and add a targeted log or alert.
-2. **Localize.** Which layer: UI, API, database, build, external service, or the test itself? Bisect. A failing test can be wrong.
-3. **Reduce.** Smallest input, smallest diff, one variable at a time. Read the error before changing code.
-4. **Fix.** Change the cause, not a symptom. Do not wrap the failure in a retry or a broader catch unless the spec says transient failure is expected.
-5. **Guard.** A regression test that failed before the fix and passes after it. Run the full suite.
-
-Use this repo's test command, not a remembered default.
+1. **Reproduce.** If it does not fail on demand, you cannot confirm the fix.
+2. **Localize.** Which layer: UI, API, database, build, external service, or the test itself?
+3. **Reduce.** Smallest input, one variable at a time. Read the error before changing code.
+4. **Fix.** Change the cause, not a symptom. Do not add a retry or broad catch to hide it.
+5. **Guard.** A regression test that fails before the fix and passes after. Run the full suite with this repo's test command.
 
 ## Safe fallbacks
 
-If you cannot fix it now: revert the slice, flag the feature off, or return a safe error. Do not leave a known-broken path enabled. Say what you reverted and why.
-
-## Rationalizations
-
-| Excuse | Rebuttal |
-|---|---|
-| "I know what it is." | Then you can write the failing test first. |
-| "It works on my machine." | Compare versions, env, and data before concluding that. |
-| "Retry will cover it." | A retry hides the cause and makes the next failure worse. |
+If you cannot fix it now, revert the slice, flag the feature off, or return a safe error. Never leave a known-broken path enabled.
 
 ## Red flags
 
 - A fix with no repro.
-- Multiple speculative edits before reading the error.
+- Speculative edits before reading the error.
 - A catch that swallows the exception to get green.
 
 ## Verification

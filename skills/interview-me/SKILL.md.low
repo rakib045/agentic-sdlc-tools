@@ -1,0 +1,24 @@
+---
+name: interview-me
+description: "Interviews the user one question at a time to uncover who, why, success, and constraints. Use when a request is underspecified or the user says interview me."
+---
+
+# Interview Me
+
+Extract what the user wants before any plan or code. One question at a time, until about 95% confidence.
+
+## Process
+
+1. Hypothesize with a defensible confidence number.
+2. Ask one question, with a guess:
+   ```
+   Q: <one focused question>
+   GUESS: <your hypothesis and why>
+   ```
+   Never batch questions.
+3. Reflect want vs should-want.
+4. Stop near 95%. Then hand off to `spec-driven-development`.
+
+## Verification
+
+You can state the user, the job to be done, the success measure, and the confirmed constraint.

@@ -1,6 +1,6 @@
 import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
 import { markdown } from "../lib/render.js";
-import { capability, skillFile, withPersona } from "./shared.js";
+import { agentDescription, capability, skillFile, withPersona } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
@@ -11,32 +11,32 @@ import type { ToolAdapter } from "./types.js";
 export const cursorAdapter: ToolAdapter = {
   id: "cursor",
   label: "Cursor",
-  render(category, name) {
+  render(category, name, level) {
     switch (category) {
       case "agents": {
-        const agent = loadAgent(name);
+        const agent = loadAgent(name, level);
         const readonly = capability(agent.permissions, "edit") === "deny" ? true : undefined;
         return [
           {
             path: `.cursor/agents/${name}.md`,
             kind: "markdown",
             content: markdown(
-              { name, description: agent.description, model: agent.models.cursor ?? "inherit", readonly },
+              { name, description: agentDescription(agent), model: agent.model, readonly },
               agent.body,
             ),
           },
         ];
       }
       case "commands": {
-        const command = loadCommand(name);
+        const command = loadCommand(name, level);
         return [
-          skillFile(".cursor/skills", name, command.description, withPersona(command.agent, command.body), {
+          skillFile(".cursor/skills", name, command.description, withPersona(command.agent, command.body, level), {
             "disable-model-invocation": true,
           }),
         ];
       }
       case "skills": {
-        const skill = loadSkill(name);
+        const skill = loadSkill(name, level);
         return [skillFile(".cursor/skills", name, skill.description, skill.body)];
       }
       case "rules":
@@ -46,7 +46,7 @@ export const cursorAdapter: ToolAdapter = {
             kind: "markdown",
             content: markdown(
               { description: "Global SDLC rules (always apply)", alwaysApply: true },
-              loadRule(name),
+              loadRule(name, level),
             ),
           },
         ];

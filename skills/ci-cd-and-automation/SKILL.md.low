@@ -1,0 +1,35 @@
+---
+name: ci-cd-and-automation
+description: "Fixes build, test, and deploy automation so CI failures reach their owner. Use when changing pipelines."
+---
+
+# CI/CD and Automation
+
+A pipeline that cannot fail a bad change is not a pipeline.
+
+## When to use
+
+Changing build, test, or deploy automation, or when CI failures are lost.
+
+## Quality gates
+
+Record the exact command for each gate:
+
+1. Format, lint, typecheck, secret scan.
+2. Focused tests for the change.
+3. Full suite, audit, and build in CI.
+4. Deploy only after those gates pass.
+
+## Practices
+
+- Keep the trunk deployable.
+- Send failures back as the log excerpt and rerun command.
+- Never log secrets.
+
+## Red flags
+
+- `continue-on-error` on tests or audits.
+
+## Verification
+
+Workflow commands and evidence that failure blocks release.

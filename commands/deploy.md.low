@@ -1,0 +1,28 @@
+---
+description: Runs parallel review, a go/no-go decision, and a versioned release with a rollback plan. Use before shipping to production or cutting a release.
+agent: devops-engineer
+subagent: false
+---
+
+# /deploy — Release Safely
+
+Invoke `ci-cd-and-automation`.
+
+1. Run `code-reviewer`, `security-reviewer`, and `qa-engineer` in parallel. Merge their reports.
+2. Decide go/no-go:
+
+```markdown
+## Ship Decision: GO | NO-GO
+### Blockers
+### Rollback plan
+- Trigger:
+- Procedure:
+```
+
+3. Only after GO: confirm a clean tree and green suite, tag the release (`conventional-commits`), run CI, and verify the artifact.
+
+## Rules
+
+- A Critical finding means NO-GO unless the user accepts the risk.
+- A GO without a rollback plan is not a GO.
+- Never publish from a dirty tree or a red suite.

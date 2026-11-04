@@ -1,6 +1,6 @@
 import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
 import { markdown } from "../lib/render.js";
-import { capability, skillFile, withPersona } from "./shared.js";
+import { agentDescription, capability, omitInherit, skillFile, withPersona } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
@@ -11,10 +11,10 @@ import type { ToolAdapter } from "./types.js";
 export const githubAdapter: ToolAdapter = {
   id: "github",
   label: "GitHub Copilot",
-  render(category, name) {
+  render(category, name, level) {
     switch (category) {
       case "agents": {
-        const agent = loadAgent(name);
+        const agent = loadAgent(name, level);
         const tools = [
           "read",
           "search",
@@ -26,24 +26,33 @@ export const githubAdapter: ToolAdapter = {
           {
             path: `.github/agents/${name}.agent.md`,
             kind: "markdown",
-            content: markdown({ name, description: agent.description, tools, model: agent.models.github }, agent.body),
+            content: markdown(
+              { name, description: agentDescription(agent), tools, model: omitInherit(agent.model) },
+              agent.body,
+            ),
           },
         ];
       }
       case "commands": {
-        const command = loadCommand(name);
+        const command = loadCommand(name, level);
         return [
-          skillFile(".github/skills", name, command.description, withPersona(command.agent, command.body), {
+          skillFile(".github/skills", name, command.description, withPersona(command.agent, command.body, level), {
             "disable-model-invocation": true,
           }),
         ];
       }
       case "skills": {
-        const skill = loadSkill(name);
+        const skill = loadSkill(name, level);
         return [skillFile(".github/skills", name, skill.description, skill.body)];
       }
       case "rules":
-        return [{ path: ".github/copilot-instructions.md", kind: "markdown", content: markdown({}, loadRule(name)) }];
+        return [
+          {
+            path: ".github/copilot-instructions.md",
+            kind: "markdown",
+            content: markdown({}, loadRule(name, level)),
+          },
+        ];
     }
   },
   doctorPaths: () => [".github/copilot-instructions.md"],

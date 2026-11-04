@@ -1,0 +1,19 @@
+---
+description: Reviews the current diff on five axes and returns a severity-labeled verdict. Use before merging a change or when asked to review a diff or PR.
+agent: code-reviewer
+subagent: false
+---
+
+# /code-review — Review the Change
+
+Invoke `code-review-and-quality` and `security-and-hardening`.
+
+1. Read the spec or task, the tests, then the implementation.
+2. Review the diff on five axes: correctness, readability, architecture, security, performance.
+3. Label every finding Critical, Required, Optional, or Nit. Cite `file:line` and a fix for Critical and Required.
+4. Verdict: Approve, Request changes, or Comment.
+
+## Rules
+
+- Be specific. State uncertainty.
+- Do not approve Critical issues, failing tests, or code you have not seen tests for.

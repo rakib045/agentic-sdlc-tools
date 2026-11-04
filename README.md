@@ -1,156 +1,274 @@
 # @rakib045/agentic-sdlc-tools
 
-Agentic AI SDLC kit — agents, skills, rules and slash commands with multi-tool support.
+An AI software team in a box. Install one kit and your coding assistant gets a product owner, an architect, frontend and backend developers, QA, DevOps, security and code reviewers, and an orchestrator that coordinates them. It works with Claude Code, OpenCode, OpenAI Codex, Gemini CLI, GitHub Copilot, and Cursor.
 
-- **Agents (SDLC):** product-owner, solution-architect, senior-developer, qa-engineer, devops-engineer, security-reviewer, code-reviewer
-- **Commands:** `/spec` `/plan` `/build` `/test` `/code-review` `/deploy` (prompt template + CLI validation via `doctor`). `/build auto` runs the approved plan task by task.
-- **Rules:** global language-agnostic standards (assumptions, definition of done, skill routing)
-- **Skills:** lifecycle workflows adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT), plus adr-writing, conventional-commits, and review-checklist. Run `list` for every name.
-- **Tools:** Claude Code, OpenCode, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor — from a single source (`agents/`, `commands/`, `rules/`, `skills/` at the repo root) adapted per tool
+- **Agents:** 9 agents, each with an icon, from 🧭 orchestrator to 🔍 code-reviewer
+- **Slash commands:** `/spec` `/plan` `/build` `/test` `/code-review` `/deploy`
+- **Skills:** 26 engineering workflows, from spec-driven development to shipping and launch
+- **Rules:** one global rule with the team's standards and definition of done
+- **Three instruction levels:** `low`, `default`, and `high`, so you can choose how much guidance to install
 
-Requires Node.js >= 20 in the target project environment.
+Requires [Node.js 20 or newer](https://nodejs.org/).
 
-## Install
+## Quick start
 
-The package is scoped, so `npx` needs the full package name (the bare
-`npx agentic-sdlc-tools` will not resolve — see [Why the full name](#why-the-full-package-name-in-npx)):
-
-```sh
-# full install (all tools)
-npx @rakib045/agentic-sdlc-tools init
-
-# only some tools, non-interactive
-npx @rakib045/agentic-sdlc-tools init --tools claude,opencode --yes
-
-# minimal preset (spec/plan/build with their agents and skills, global rule)
-npx @rakib045/agentic-sdlc-tools init --preset minimal --yes
-
-# preview without writing
-npx @rakib045/agentic-sdlc-tools init --dry-run
-```
-
-Valid `--tools` values: `claude,opencode,codex,gemini,github,cursor` (default: all).
-
-## Granular install
+From your project folder, preview the files for the assistant you use, then install them:
 
 ```sh
-npx @rakib045/agentic-sdlc-tools list
-npx @rakib045/agentic-sdlc-tools list --tools
-
-npx @rakib045/agentic-sdlc-tools add agent:senior-developer --tools claude,github
-npx @rakib045/agentic-sdlc-tools add command:spec --tools opencode
-npx @rakib045/agentic-sdlc-tools add skill:adr-writing --tools claude,opencode,codex,gemini,github,cursor
-npx @rakib045/agentic-sdlc-tools add rule:global --tools cursor
+npx @rakib045/agentic-sdlc-tools init --tools claude --dry-run
+npx @rakib045/agentic-sdlc-tools init --tools claude --yes
 ```
 
-Spec format is `<type>:<name>` where type is `agent|command|skill|rule`. Run `list` to see every available name.
+Replace `claude` with `opencode`, `codex`, `gemini`, `github`, or `cursor`. To install for more than one assistant, use a comma-separated list such as `--tools claude,opencode`. After installing, reopen the project in your assistant and follow the [tool-specific start steps](#start-the-kit-in-your-assistant) below.
 
-## Update / validate
+Check the install and your project setup with:
 
 ```sh
-npx @rakib045/agentic-sdlc-tools update --check   # report what would change
-npx @rakib045/agentic-sdlc-tools update --diff    # same, per-file status
-npx @rakib045/agentic-sdlc-tools update --force   # apply updates
-npx @rakib045/agentic-sdlc-tools doctor           # validate spec/plan/test artifacts + kit installation
+npx @rakib045/agentic-sdlc-tools doctor
 ```
 
-**Safety:** `init` and `add` never overwrite a file that differs from the kit without `--force`, and they exit non-zero when they hit a conflict. With `--force` they back up the original to `*.bak` first. Re-running `init` is idempotent. `update` refreshes only files that are already installed and never adds items you did not choose.
+For a project with `SPEC.md`, `PLAN.md`, `package.json`, and Claude Code files installed, a successful check looks like:
 
-## Where files go
+```text
+PASS spec: SPEC.md
+PASS plan: PLAN.md
+PASS test: package.json
+PASS kit: installed for [claude]
 
-| Harness | Agents | Commands | Skills | Rules |
+4/4 checks passed.
+```
+
+> The package is scoped, so use the full name with `npx`. The bare `npx agentic-sdlc-tools` does not resolve.
+
+## Choose a token-efficiency level
+
+Every agent, command, skill, and rule comes in three versions. Pick one with `--token-efficiency`:
+
+| Level | Flag | Template set* | Instructions | Approx. source size vs. high |
 |---|---|---|---|---|
-| Claude Code | `.claude/agents/<id>.md` | `.claude/commands/<id>.md` | `.claude/skills/<id>/SKILL.md` | `CLAUDE.md` |
-| OpenCode | `.opencode/agents/<id>.md` | `.opencode/commands/<id>.md` | `.opencode/skills/<id>/SKILL.md` | `AGENTS.md` |
-| OpenAI Codex | `.codex/agents/<id>.toml` | `.agents/skills/<id>/SKILL.md` (implicit invocation off) | `.agents/skills/<id>/SKILL.md` | `AGENTS.md` |
-| Gemini CLI | `.gemini/agents/<id>.md` | `.gemini/commands/<id>.toml` | `.gemini/skills/<id>/SKILL.md` | `GEMINI.md` |
-| GitHub Copilot | `.github/agents/<id>.agent.md` | `.github/skills/<id>/SKILL.md` (invocation off) | `.github/skills/<id>/SKILL.md` | `.github/copilot-instructions.md` |
-| Cursor | `.cursor/agents/<id>.md` | `.cursor/skills/<id>/SKILL.md` (invocation off) | `.cursor/skills/<id>/SKILL.md` | `.cursor/rules/global.mdc` (`alwaysApply: true`) |
+| **low** | `--token-efficiency low` | 9 agents, 6 commands, 14 skills, 1 rule (30 templates) | Shortest. Only the essentials. Agents load fewer skills. | ~30% of high |
+| **default** | no flag, or `--token-efficiency default` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Balanced. Every workflow, trimmed for everyday use. | ~67% of high |
+| **high** | `--token-efficiency high` | 9 agents, 6 commands, 26 skills, 1 rule (42 templates) | Full detail, the complete original instructions. | 100% |
 
-Skills use the [Agent Skills](https://agentskills.io) layout everywhere: one directory per skill, with a `SKILL.md` whose `name` matches the directory and whose `description` says when to use it.
+\* Template counts describe the source set, not the number of generated files across all selected tools; some tools render a template into multiple files. Source sizes compare UTF-8 template bytes with `high`; they are not token counts or guaranteed billing savings. Skills can load on demand, so actual context use depends on your assistant and how you use the kit. Choose **low** for shorter instructions, **default** for everyday use, and **high** for the fullest guidance.
 
-Harness-specific notes:
+The low level installs these skills only:
 
-- **Codex** custom prompts are deprecated, so Codex commands are skills. Each one ships an `agents/openai.yaml` that turns implicit invocation off, so the model only runs it when you type its name.
-- **Cursor** ignores plain `.md` rules, so the global rule is `.mdc`. Cursor's slash commands are skills with `disable-model-invocation: true`, which is how Cursor migrates them.
-- **GitHub Copilot** CLI runs skills rather than prompt files, so commands are skills with `disable-model-invocation: true`.
-- **Gemini** custom commands are TOML files with `description` and `prompt`.
-- **OpenCode** binds each command to its persona with `agent:`. Other harnesses have no equivalent for commands, so the command gets a `Persona:` line that names the agent, and for Claude its model.
-- Installed files start with an install note. `init` never overwrites a file you changed; re-run with `--force` to replace it (the original is kept as `*.bak`).
+`planning-and-task-breakdown`, `interview-me`, `spec-driven-development`, `adr-writing`, `api-and-interface-design`, `incremental-implementation`, `test-driven-development`, `frontend-ui-engineering`, `debugging-and-error-recovery`, `conventional-commits`, `ci-cd-and-automation`, `code-review-and-quality`, `review-checklist`, `security-and-hardening`
 
-## Models per harness
+Files are installed under their normal names. The levels differ only in the template they come from, so `.claude/agents/orchestrator.md` is the same path at every level. The installer drops the level suffix for you.
 
-Each agent sets one model per harness in the `models:` map of its frontmatter. The installer writes the value that belongs to each harness, so OpenCode gets `opencode/...`, Claude gets Claude names, Codex gets `gpt-*`, Gemini gets `gemini-*`, GitHub Copilot gets its model picker names, and Cursor gets its model IDs.
+To switch levels in a project you already set up, add `--force`. The original files are kept as `*.bak`:
 
-| Agent | OpenCode | Claude | Codex | Gemini | GitHub Copilot | Cursor |
-|---|---|---|---|---|---|---|
-| product-owner | `opencode/claude-fable-5-1#medium` | `sonnet` | `gpt-6.1-sol` | `gemini-3-pro-preview` | `Claude Sonnet 5.5` | `inherit` |
-| solution-architect | `opencode/claude-fable-5-1#high` | `opus` | `gpt-6.1-sol` | `gemini-3-pro-preview` | `Claude Opus 5.5` | `claude-opus-5[effort=high]` |
-| senior-developer | `opencode/gpt-6.1-sol#medium` | `sonnet` | `gpt-6.1-sol` | `gemini-3-pro-preview` | `GPT-6.1 Sol` | `gpt-5.6-sol` |
-| qa-engineer | `opencode/claude-haiku-5-5#medium` | `sonnet` | `gpt-6-luna` | `gemini-3-flash-preview` | `Claude Haiku 5.5` | `composer-2.5` |
-| devops-engineer | `opencode/gpt-6-luna#medium` | `sonnet` | `gpt-6.1-sol` | `gemini-3-flash-preview` | `GPT-6 Luna` | `inherit` |
-| code-reviewer | `opencode/gpt-6.1-sol#high` | `opus` | `gpt-6.1-sol` | `gemini-3-pro-preview` | `GPT-6.1 Sol` | `gpt-5.6-sol` |
-| security-reviewer | `opencode/claude-fable-5-1#high` | `opus` | `gpt-6.1-sol` | `gemini-3-pro-preview` | `Claude Opus 5.5` | `claude-opus-5[effort=high]` |
+```sh
+npx @rakib045/agentic-sdlc-tools init --token-efficiency low --force
+```
 
-Reasoning effort comes from `effort:` (Claude and Codex) and from the `#variant` suffix (OpenCode). Model availability depends on your plan and provider. Check your model picker, and change the value in `agents/<id>.md` and re-run `init --force`, or edit the installed file.
+## Your team
 
-## After install: what you can change
-
-Installed files are plain files, so you can edit them. `update` reports an edited file as outdated and leaves it alone; `update --force` replaces it and keeps the original as `*.bak`. The tables below list the fields each harness reads. Unknown fields are ignored.
-
-### Agents
-
-| Harness | File | Metadata you can change |
+| Icon | Agent | What it does |
 |---|---|---|
-| OpenCode | `.opencode/agents/<id>.md` | `description`, `mode` (`primary`, `subagent`, `all`), `model` (`provider/model#variant`), `permissions` (`edit`, `shell`, `subagent`, `skill` rules with `allow`/`ask`/`deny`), `steps`, `hidden`, `color`, `disabled`. The body is the system prompt. |
-| Claude Code | `.claude/agents/<id>.md` | `name`, `description`, `model` (`sonnet`, `opus`, `haiku`, `fable`, `inherit`, or a full model ID), `effort` (`low` to `max`), `skills` (preloaded into the subagent), `tools` or `disallowedTools`, `permissionMode`, `maxTurns`, `memory`, `isolation`, `color`. |
-| OpenAI Codex | `.codex/agents/<id>.toml` | `name`, `description`, `developer_instructions` (the prompt), `model`, `model_reasoning_effort`. Set `features.*` to turn capabilities off. |
-| Gemini CLI | `.gemini/agents/<id>.md` | `name`, `description`, `kind` (`local` or `remote`), `tools` (for example `read_file`, `write_file`, `run_shell_command`), `model`, `temperature`, `max_turns`, `timeout_mins`. |
-| GitHub Copilot | `.github/agents/<id>.agent.md` | `name`, `description` (required), `tools` (aliases `read`, `search`, `edit`, `execute`, `agent`, `web`, `todo`), `model`, `user-invocable`, `disable-model-invocation`. |
-| Cursor | `.cursor/agents/<id>.md` | `name`, `description`, `model` (`inherit` or a model ID, for example `claude-opus-5[effort=high]`), `readonly`, `is_background`. |
+| 🧭 | `orchestrator` | Plans the work, delegates each task to the right agent, and tracks progress |
+| 📋 | `product-owner` | Turns vague ideas into requirements and acceptance criteria |
+| 📐 | `solution-architect` | Designs the approach, writes the plan and architecture decisions |
+| 🎨 | `senior-frontend-developer` | Builds user interfaces with tests and browser checks |
+| 🔧 | `senior-backend-developer` | Builds APIs, services, data, and integrations with tests |
+| 🧪 | `qa-engineer` | Writes tests, proves behavior, and reproduces bugs |
+| 🚀 | `devops-engineer` | Sets up pipelines, releases, and rollbacks |
+| 🔒 | `security-reviewer` | Finds exploitable vulnerabilities at trust boundaries |
+| 🔍 | `code-reviewer` | Reviews changes on five axes before they merge |
 
-### Commands
+### The orchestrator
 
-| Harness | File | Metadata you can change |
-|---|---|---|
-| OpenCode | `.opencode/commands/<id>.md` | `description`, `agent` (persona), `model` (`provider/model#variant`), `subagent` (`true` runs it in a child session). |
-| Claude Code | `.claude/commands/<id>.md` | `description`, `model`, `allowed-tools`, `argument-hint`. |
-| OpenAI Codex | `.agents/skills/<id>/SKILL.md` and `agents/openai.yaml` | `description`. In `openai.yaml`, `policy.allow_implicit_invocation` (`false` by default for commands). |
-| Gemini CLI | `.gemini/commands/<id>.toml` | `description`, `prompt`. |
-| GitHub Copilot | `.github/skills/<id>/SKILL.md` | `description`, `disable-model-invocation`, `user-invocable`, `argument-hint`. |
-| Cursor | `.cursor/skills/<id>/SKILL.md` | `description`, `disable-model-invocation`, `paths` (scope to files), `icon`, `color`. |
+The orchestrator is the team lead. It works in this order:
 
-### Skills
+1. **Clarify.** An unclear request goes to the product owner. You approve the spec.
+2. **Plan.** The architect turns the spec into an ordered plan. You approve the plan.
+3. **Build.** Each task goes to the frontend or backend developer. QA proves the behavior.
+4. **Review.** The code reviewer checks every change. The security reviewer joins when the change touches sensitive areas. DevOps handles the release.
 
-| Harness | File | Metadata you can change |
-|---|---|---|
-| All | `<skills dir>/<id>/SKILL.md` | `name` (must equal the directory name) and `description`. The description decides when the model loads the skill, so keep the "use when" trigger in it. |
-| OpenCode | same | `metadata.opencode/autoinvoke: false` hides it from the model's list. `disable-model-invocation: true` does the same. |
-| Claude Code | same | `disable-model-invocation`, `user-invocable`, `allowed-tools`, `context: fork`, `model`, `paths`, `argument-hint`. |
-| OpenAI Codex | `agents/openai.yaml` next to `SKILL.md` | `policy.allow_implicit_invocation`. |
-| GitHub Copilot | same | `user-invocable`, `disable-model-invocation`, `argument-hint`. |
-| Cursor | same | `disable-model-invocation`, `paths`, `icon`, `color`. |
-| Gemini CLI | none in the file | Turn skills on or off with `/skills enable <name>` and `/skills disable <name>`. |
+The orchestrator never merges or releases on its own. It shows you the reviewer reports and you decide.
 
-## SDLC flow
+```mermaid
+flowchart LR
+    H[You approve scope] --> PO[📋 Product owner<br/>SPEC.md]
+    PO -->|you approve spec| SA[📐 Architect<br/>PLAN.md]
+    SA -->|you approve plan| O[🧭 Orchestrator]
+    O --> FE[🎨 Frontend developer]
+    O --> BE[🔧 Backend developer]
+    FE --> QA[🧪 QA verifies]
+    BE --> QA
+    QA --> CR[🔍 Code review]
+    CR -->|you decide| D[🚀 Release, when requested]
+```
+
+The human approval steps are intentional: the kit helps prepare and verify work; it does not approve a spec, plan, merge, or release for you.
+
+### Icons show who is working
+
+Every agent, including the sub-agents the orchestrator starts, begins each message with its icon, name, and state:
+
+- ⏳ working
+- ✅ done
+- ⛔ blocked
+
+For example: `🎨 senior-frontend-developer ⏳ working: login form validation`.
+
+Before the orchestrator hands off work, it prints the delegation, such as `🧭 orchestrator → 🔧 senior-backend-developer ⏳ add the sessions endpoint`. Its status board lists every agent, its task, and its state. Nothing runs silently.
+
+## Commands: the SDLC flow
 
 ```
 /spec -> /plan -> /build -> /test -> /code-review -> /deploy
 ```
 
-Each command file is a prompt template for the AI; `doctor` is the executable check (spec/plan/test artifacts + kit installation). Commands invoke skills; personas do not invoke other personas. `/deploy` is the parallel review fan-out (code review, security, QA) before a go/no-go.
+| Command | Who runs it | What happens |
+|---|---|---|
+| `/spec` | 📋 product-owner | Writes `SPEC.md`, then waits for your approval |
+| `/plan` | 📐 solution-architect | Writes `PLAN.md` with ordered, testable tasks. Does not write product code |
+| `/build` | 🧭 orchestrator | Implements the next task test-first. `/build auto` runs every task after one approval |
+| `/test` | 🧪 qa-engineer | Writes failing tests first, or reproduces a bug before it is fixed |
+| `/code-review` | 🔍 code-reviewer | Reviews the current change and gives a verdict |
+| `/deploy` | 🚀 devops-engineer | Runs parallel reviews, makes a go/no-go call, then releases with a rollback plan |
 
-## Repo layout (contributing)
+Run `npx @rakib045/agentic-sdlc-tools doctor` at any step. It checks that your spec, plan, and test setup are in place.
+
+## Start the kit in your assistant
+
+The installer writes files to the locations listed in [Where the files go](#where-the-files-go). Commands use the same names in every tool; some tools implement them as skills rather than native slash commands.
+
+| Assistant | How to start |
+|---|---|
+| Claude Code | From the project, run `/spec`, `/plan`, or `/build`. The command templates include the relevant agent persona. |
+| OpenCode | Run `/spec`, `/plan`, or `/build`; the command files bind to their configured agents. |
+| OpenAI Codex | Invoke the installed command skill by its name in the project. Command skills have implicit invocation disabled. |
+| Gemini CLI | Run the installed custom command, such as `/spec` or `/build`. |
+| GitHub Copilot | Invoke the installed user-started skill for the command you want. |
+| Cursor | Invoke the installed command skill from Cursor; it is not automatically invoked. |
+
+If your assistant does not detect newly added files immediately, reopen the project or reload its configuration, then run `doctor` again.
+
+## Install options
+
+```sh
+# everything, for every supported tool, at the default level
+npx @rakib045/agentic-sdlc-tools init
+
+# the smallest kit, for every tool
+npx @rakib045/agentic-sdlc-tools init --token-efficiency low --yes
+
+# only some tools, no prompts
+npx @rakib045/agentic-sdlc-tools init --tools claude,opencode --yes
+
+# a smaller kit: spec, plan, and build, with the agents they need
+npx @rakib045/agentic-sdlc-tools init --preset minimal --yes
+
+# the full, detailed instructions
+npx @rakib045/agentic-sdlc-tools init --token-efficiency high --yes
+
+# preview what would be written, without writing anything
+npx @rakib045/agentic-sdlc-tools init --dry-run
+```
+
+Valid tool names: `claude`, `opencode`, `codex`, `gemini`, `github`, `cursor`.
+Valid levels: `low`, `default`, `high`. Any other value is rejected with an error.
+
+### Add pieces one at a time
+
+```sh
+npx @rakib045/agentic-sdlc-tools list                          # every name, at the default level
+npx @rakib045/agentic-sdlc-tools list --token-efficiency low   # the names available at the low level
+npx @rakib045/agentic-sdlc-tools list --tools                  # where each tool reads its files
+
+npx @rakib045/agentic-sdlc-tools add agent:orchestrator --tools claude,github
+npx @rakib045/agentic-sdlc-tools add command:spec --tools opencode --token-efficiency low
+npx @rakib045/agentic-sdlc-tools add skill:adr-writing
+npx @rakib045/agentic-sdlc-tools add rule:global --tools cursor --token-efficiency high
+```
+
+Names use the form `<type>:<name>`, where type is `agent`, `command`, `skill`, or `rule`.
+
+### Keep it up to date
+
+```sh
+npx @rakib045/agentic-sdlc-tools update --check                    # report what would change
+npx @rakib045/agentic-sdlc-tools update --diff                     # the same, file by file
+npx @rakib045/agentic-sdlc-tools update --force                    # apply the updates
+npx @rakib045/agentic-sdlc-tools update --token-efficiency low --force   # refresh a low install
+npx @rakib045/agentic-sdlc-tools doctor                            # check spec, plan, test setup, and the install
+```
+
+**Use the same level for `update` that you installed with.** `update` refreshes only the files you already have, at the level you name. Without the flag it uses `default`.
+
+**Your edits are safe.** `init` and `add` never overwrite a file you changed. They stop with a conflict instead. With `--force`, the original is saved as `*.bak` first. `update` only refreshes files you already installed, and it never adds items you did not choose. Running `init` again does nothing if nothing changed.
+
+## Where the files go
+
+| Tool | Agents | Commands | Skills | Rules |
+|---|---|---|---|---|
+| Claude Code | `.claude/agents/<id>.md` | `.claude/commands/<id>.md` | `.claude/skills/<id>/SKILL.md` | `CLAUDE.md` |
+| OpenCode | `.opencode/agents/<id>.md` | `.opencode/commands/<id>.md` | `.opencode/skills/<id>/SKILL.md` | `AGENTS.md` |
+| OpenAI Codex | `.codex/agents/<id>.toml` | `.agents/skills/<id>/SKILL.md` | `.agents/skills/<id>/SKILL.md` | `AGENTS.md` |
+| Gemini CLI | `.gemini/agents/<id>.md` | `.gemini/commands/<id>.toml` | `.gemini/skills/<id>/SKILL.md` | `GEMINI.md` |
+| GitHub Copilot | `.github/agents/<id>.agent.md` | `.github/skills/<id>/SKILL.md` | `.github/skills/<id>/SKILL.md` | `.github/copilot-instructions.md` |
+| Cursor | `.cursor/agents/<id>.md` | `.cursor/skills/<id>/SKILL.md` | `.cursor/skills/<id>/SKILL.md` | `.cursor/rules/global.mdc` |
+
+Each tool gets the format it reads. A few differences matter in practice:
+
+- **Codex** no longer supports custom prompts, so its commands are skills. They only run when you type the command name.
+- **Cursor** ignores plain `.md` rules, so the global rule is an `.mdc` file that always applies.
+- **GitHub Copilot and Cursor** run commands as skills that only you can start.
+- **Gemini** commands are TOML files with a description and a prompt.
+- **Claude Code** custom sub-agents cannot start other sub-agents. Run orchestration from the main conversation; `/build` includes the orchestrator persona in its command prompt.
+
+## Models: every agent inherits yours
+
+The kit does not pin a model for any agent. Every agent uses `model: inherit`, so it runs on the model your session already uses. Change your model once and the whole team follows.
+
+- **Claude Code** and **Cursor** receive `inherit` directly.
+- **OpenCode**, **Codex**, **Gemini**, and **GitHub Copilot** have no `inherit` setting. Their files leave the model field out, which means the same thing.
+
+Reasoning effort is still set per agent with `effort:`. It applies to Claude Code and Codex. Other tools use the effort set in your session.
+
+## Customize after install
+
+Installed files are plain files. You can edit them freely.
+
+| Where | What you can change |
+|---|---|
+| Agents | `description`, `icon`, `mode`, `model`, `permissions`, `effort`, and the prompt body |
+| Commands | `description`, the bound agent, and the prompt body |
+| Skills | `description` (it decides when the assistant loads the skill) and the body |
+
+Fields a tool does not read are ignored.
+
+Permissions control what each agent can do. The orchestrator can delegate to every other agent, and `devops-engineer` can launch the reviewers. The other agents work on their own. The code and security reviewers are read-only.
+
+## Repo layout (for contributors)
 
 ```
-agents/ commands/ rules/ skills/   # single source of truth (edit these)
-skills/<id>/SKILL.md               # one directory per skill (installer copies SKILL.md only)
-src/                               # TypeScript CLI (commander) + per-harness adapters
-src/lib/source.ts                  # reads template frontmatter (agents: models, skills, permissions)
-scripts/copy-templates.mjs         # copies root categories -> dist/templates on build
+agents/ commands/ rules/ skills/   # single source of truth: edit these
+src/                               # TypeScript CLI and one adapter per tool
+src/lib/manifest.ts                # token-efficiency levels and template lookup
+src/lib/source.ts                  # reads template frontmatter (icon, model, skills, permissions)
+scripts/copy-templates.mjs         # copies the templates into dist/ on build
 tests/                             # vitest
-dist/                              # build output (gitignored, published to npm)
 ```
+
+Every template exists in up to three versions, named by level:
+
+```
+agents/orchestrator.md.low         # low: shortest instructions, fewer skills bound
+agents/orchestrator.md             # default: balanced
+agents/orchestrator.md.high        # high: full detail
+skills/<id>/SKILL.md.low           # low files exist only for the 14 low-level skills
+skills/<id>/SKILL.md               # default: all 26 skills
+skills/<id>/SKILL.md.high
+```
+
+Each skill is one folder with a `SKILL.md` file. The installer drops the level suffix and writes the chosen version under the plain name.
+
+When you change a template, change the same item at every level it exists at. Tests check that low files reference only low skills, that each agent's "Load these skills" list matches its binding, and that low is shorter than default, which is shorter than high.
 
 ```sh
 npm install
@@ -161,20 +279,26 @@ npm run build
 
 ## Publishing (maintainers)
 
-One-time setup: create the npm org `@rakib045`, enable 2FA, `npm login`, then publish once manually so the package exists:
+One-time setup:
 
-```sh
-npm run build
-npm publish --access public
-```
+1. Create the npm org `@rakib045` at `npmjs.com/org/create`.
+2. Turn on 2FA and run `npm login`.
+3. Publish once by hand so the package exists:
 
-After that, attach the GitHub trusted publisher (npm package Settings → Trusted Publisher → `rakib045/agentic-sdlc-tools`, workflow `publish.yml`). From then on every GitHub Release auto-publishes via `.github/workflows/publish.yml` (`npm publish --provenance` with OIDC, no tokens). Bump with `npm version patch|minor|major`, push tags, draft a release from the tag.
+   ```sh
+   npm run build
+   npm publish --access public
+   ```
+
+4. Attach a trusted publisher on npm (Settings → Trusted Publisher → `rakib045/agentic-sdlc-tools`, workflow `publish.yml`).
+
+After that, each GitHub Release publishes automatically through `.github/workflows/publish.yml`, with provenance and no tokens. To release, bump the version with `npm version patch|minor|major`, push the tag, and draft a release from it.
 
 Notes:
 
-- Local publishes must not request provenance (attestation only works on CI) — `publishConfig` intentionally omits it; CI passes `--provenance` explicitly.
-- `404` on first `npm publish` means the `@rakib045` org doesn't exist yet — create it at `npmjs.com/org/create` and retry.
+- Local publishes must not request provenance. Only CI can attest it. `publishConfig` leaves it out on purpose.
+- A `404` on the first publish means the `@rakib045` org does not exist yet.
 
-## Why the full package name in npx?
+## License
 
-`npx <name>` resolves a *package* name, and the binary (`agentic-sdlc-tools`) only becomes available after that package is fetched. Since the package is the scoped `@rakib045/agentic-sdlc-tools`, the correct invocation is `npx @rakib045/agentic-sdlc-tools <command>`. (After a global `npm i -g @rakib045/agentic-sdlc-tools`, the bare `agentic-sdlc-tools` binary works directly.)
+MIT. See [LICENSE](LICENSE).

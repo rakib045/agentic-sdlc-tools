@@ -1,0 +1,16 @@
+---
+name: review-checklist
+description: "Pre-verdict checklist for code review. Use as the final gate before approving or requesting changes."
+---
+
+# Review Checklist
+
+Final gate before a review verdict. Full workflow: `code-review-and-quality`.
+
+- [ ] Correctness matches the spec, including errors.
+- [ ] Tests prove the behavior.
+- [ ] Security: input validated, no secrets in code or logs.
+- [ ] `CONSTRAINTS.md` not weakened.
+- [ ] Build and tests actually ran.
+
+**Critical** blocks merge. **Required** must be fixed. Each has `file:line` and a fix. Approve only when Critical is empty and tests pass.

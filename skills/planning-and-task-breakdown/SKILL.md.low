@@ -1,0 +1,21 @@
+---
+name: planning-and-task-breakdown
+description: "Breaks a spec into ordered, verifiable tasks with dependencies. Use when a spec is too large to start or will span sessions."
+---
+
+# Planning and Task Breakdown
+
+Break a spec into small, verifiable tasks in dependency order. This is read-only: output a plan, not code.
+
+## Process
+
+1. Read `SPEC.md` (or `docs/spec.md`). If there is no spec, stop and run `/spec`.
+2. If `PLAN.md` has unchecked tasks for other work, stop and ask. Never overwrite it.
+3. Plan vertical slices. Never "all schema, then all APIs".
+4. Each task needs acceptance criteria, a verification step, dependencies, and a size. Split anything L or larger.
+5. Put high-risk tasks early. Save the ordered list to `PLAN.md`.
+6. Present the plan and stop. Do not implement.
+
+## Verification
+
+Tasks are ordered, each has acceptance criteria and a verification step, and the user approved before build.

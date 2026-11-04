@@ -1,0 +1,30 @@
+---
+name: test-driven-development
+description: "Writes failing tests first, then minimal code to pass. Use for new logic, bug fixes, or behavior changes."
+---
+
+# Test-Driven Development
+
+Write a failing test before the code that makes it pass.
+
+## When to use
+
+New logic, bugs, or behavior changes.
+
+## Cycle
+
+1. **Red.** Write the test. Confirm it fails for the expected reason.
+2. **Green.** Write the minimum code to pass.
+3. **Refactor.** Clean up. Re-run tests.
+
+For bugs: reproduce with a failing test first, fix the root cause, then run the full suite.
+
+## Rules
+
+- Find the test command in this repo first. Do not assume `npm test`.
+- Never delete assertions or add `.skip` to get green.
+- A green unit test does not prove UI behavior.
+
+## Verification
+
+Show the red output, the green output, and the full-suite result.

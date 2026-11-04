@@ -1,6 +1,6 @@
 import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
 import { markdown, tomlValue } from "../lib/render.js";
-import { capability, skillFile, withPersona } from "./shared.js";
+import { agentDescription, capability, omitInherit, skillFile, withPersona } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
@@ -10,10 +10,10 @@ import type { ToolAdapter } from "./types.js";
 export const geminiAdapter: ToolAdapter = {
   id: "gemini",
   label: "Gemini CLI",
-  render(category, name) {
+  render(category, name, level) {
     switch (category) {
       case "agents": {
-        const agent = loadAgent(name);
+        const agent = loadAgent(name, level);
         const tools = [
           "read_file",
           "grep_search",
@@ -27,15 +27,15 @@ export const geminiAdapter: ToolAdapter = {
             path: `.gemini/agents/${name}.md`,
             kind: "markdown",
             content: markdown(
-              { name, description: agent.description, kind: "local", model: agent.models.gemini, tools },
+              { name, description: agentDescription(agent), kind: "local", model: omitInherit(agent.model), tools },
               agent.body,
             ),
           },
         ];
       }
       case "commands": {
-        const command = loadCommand(name);
-        const prompt = withPersona(command.agent, command.body);
+        const command = loadCommand(name, level);
+        const prompt = withPersona(command.agent, command.body, level);
         return [
           {
             path: `.gemini/commands/${name}.toml`,
@@ -45,11 +45,11 @@ export const geminiAdapter: ToolAdapter = {
         ];
       }
       case "skills": {
-        const skill = loadSkill(name);
+        const skill = loadSkill(name, level);
         return [skillFile(".gemini/skills", name, skill.description, skill.body)];
       }
       case "rules":
-        return [{ path: "GEMINI.md", kind: "markdown", content: markdown({}, loadRule(name)) }];
+        return [{ path: "GEMINI.md", kind: "markdown", content: markdown({}, loadRule(name, level)) }];
     }
   },
   doctorPaths: () => ["GEMINI.md"],

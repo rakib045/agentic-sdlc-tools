@@ -1,0 +1,25 @@
+---
+name: debugging-and-error-recovery
+description: "Fixes failing tests and broken builds. Use when a test fails, the build breaks, or a bug is reported."
+---
+
+# Debugging and Error Recovery
+
+Find the root cause, fix it, and guard it.
+
+## When to use
+
+A test fails, the build breaks, or a bug is reported.
+
+## Process
+
+1. Stop adding features. Keep the error output and repro steps.
+2. Reproduce the failure on demand.
+3. Fix the cause, not a symptom. Do not add a retry or broad catch.
+4. Guard with a regression test (`test-driven-development`) that fails before the fix.
+
+Do not push past a red suite.
+
+## Verification
+
+Repro steps, the root cause in one sentence, and a red-then-green test run.

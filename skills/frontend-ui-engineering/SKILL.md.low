@@ -1,0 +1,27 @@
+---
+name: frontend-ui-engineering
+description: "Builds user-facing UI that is accessible and responsive. Use when creating or changing anything a person sees or operates."
+---
+
+# Frontend UI Engineering
+
+Build UI that matches the design system and works without a mouse.
+
+## When to use
+
+Creating or changing anything a person sees or operates.
+
+## Process
+
+1. Match the existing component and styling patterns.
+2. Handle long text, empty states, and errors.
+3. Accessibility is part of done: keyboard access, visible focus, accessible names.
+4. Prefer semantic elements over clickable divs.
+
+## Red flags
+
+- Interactive elements with no name and no keyboard path.
+
+## Verification
+
+Local UI patterns are matched and keyboard and empty/error states are covered.

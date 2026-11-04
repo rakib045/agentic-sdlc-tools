@@ -7,7 +7,7 @@ import { parse as parseToml } from "smol-toml";
 import { ALL_TOOL_IDS, getAdapter, parseTools } from "../src/adapters/index.js";
 import { doctor, install, kitItems, planFiles, update } from "../src/commands.js";
 import { inspect } from "../src/lib/files.js";
-import { listItems, manifest, readItem } from "../src/lib/manifest.js";
+import { listItems, manifest, parseLevel, readItem, TOKEN_LEVELS, type TokenLevel } from "../src/lib/manifest.js";
 import { INSTALL_NOTE, withHeader } from "../src/lib/render.js";
 import { loadAgent, loadCommand, loadSkill, parseFrontmatter } from "../src/lib/source.js";
 
@@ -15,6 +15,8 @@ const TOOLS = ALL_TOOL_IDS;
 const AGENTS = listItems("agents");
 const COMMANDS = listItems("commands");
 const SKILLS = listItems("skills");
+const LOW_SKILLS = listItems("skills", "low");
+const LOW_AGENTS = listItems("agents", "low");
 
 function frontmatterOf(text: string): Record<string, unknown> {
   const match = text.match(/^---\n([\s\S]*?)\n---/);
@@ -22,8 +24,13 @@ function frontmatterOf(text: string): Record<string, unknown> {
   return parseYaml(match[1]) as Record<string, unknown>;
 }
 
-function rendered(tool: string, category: "agents" | "commands" | "skills" | "rules", name: string) {
-  return getAdapter(tool).render(category, name);
+function rendered(
+  tool: string,
+  category: "agents" | "commands" | "skills" | "rules",
+  name: string,
+  level: TokenLevel = "default",
+) {
+  return getAdapter(tool).render(category, name, level);
 }
 
 function tempProject(): string {
@@ -41,7 +48,7 @@ describe("tools", () => {
 
 describe("manifest", () => {
   it("discovers the kit", () => {
-    expect(AGENTS).toHaveLength(7);
+    expect(AGENTS).toHaveLength(9);
     expect(COMMANDS).toHaveLength(6);
     expect(SKILLS).toHaveLength(26);
     expect(manifest().rules).toEqual(["global"]);
@@ -53,66 +60,68 @@ describe("manifest", () => {
 });
 
 describe("source metadata", () => {
-  it("gives every agent, command, and skill a description", () => {
-    for (const name of AGENTS) expect(loadAgent(name).description, `agent ${name}`).toBeTruthy();
-    for (const name of COMMANDS) expect(loadCommand(name).description, `command ${name}`).toBeTruthy();
-    for (const name of SKILLS) expect(loadSkill(name).description, `skill ${name}`).toBeTruthy();
-  });
-  it("binds every command to an existing agent", () => {
-    for (const name of COMMANDS) {
-      const agent = loadCommand(name).agent;
-      expect(agent, `command ${name}`).toBeDefined();
-      expect(AGENTS, `command ${name}`).toContain(agent);
+  it("gives every agent, command, and skill a description at every level", () => {
+    for (const level of TOKEN_LEVELS) {
+      for (const name of listItems("agents", level)) expect(loadAgent(name, level).description, `agent ${name} ${level}`).toBeTruthy();
+      for (const name of listItems("commands", level)) expect(loadCommand(name, level).description, `command ${name} ${level}`).toBeTruthy();
+      for (const name of listItems("skills", level)) expect(loadSkill(name, level).description, `skill ${name} ${level}`).toBeTruthy();
     }
   });
-  it("gives every skill a name that matches its directory", () => {
-    for (const name of SKILLS) {
-      expect(parseFrontmatter(readItem("skills", name)).name, `skill ${name}`).toBe(name);
+  it("binds every command to an existing agent at every level", () => {
+    for (const level of TOKEN_LEVELS) {
+      const agents = listItems("agents", level);
+      for (const name of listItems("commands", level)) {
+        const agent = loadCommand(name, level).agent;
+        expect(agent, `command ${name} ${level}`).toBeDefined();
+        expect(agents, `command ${name} ${level}`).toContain(agent);
+      }
     }
   });
-  it("binds only skills that exist", () => {
-    for (const agent of AGENTS) {
-      for (const skill of loadAgent(agent).skills) expect(SKILLS, `${agent} -> ${skill}`).toContain(skill);
+  it("gives every skill a name that matches its directory at every level", () => {
+    for (const level of TOKEN_LEVELS) {
+      for (const name of listItems("skills", level)) {
+        expect(parseFrontmatter(readItem("skills", name, level)).name, `skill ${name} ${level}`).toBe(name);
+      }
     }
   });
-  it("keeps each agent's 'Load these skills' list in step with its skills binding", () => {
-    for (const agent of AGENTS) {
-      const body = loadAgent(agent).body;
-      const section = body.match(/## Load (?:these )?skills?\n([\s\S]*?)(?:\n## |$)/)?.[1] ?? "";
-      const listed = [...section.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]).filter((id) => SKILLS.includes(id));
-      expect([...new Set(listed)].sort(), agent).toEqual([...new Set(loadAgent(agent).skills)].sort());
+  it("binds only skills that exist at the same level", () => {
+    for (const level of TOKEN_LEVELS) {
+      const skills = listItems("skills", level);
+      for (const agent of listItems("agents", level)) {
+        for (const skill of loadAgent(agent, level).skills) expect(skills, `${agent} ${level} -> ${skill}`).toContain(skill);
+      }
     }
   });
-  it("gives every agent a model for every harness", () => {
-    for (const agent of AGENTS) {
-      for (const tool of TOOLS) expect(loadAgent(agent).models[tool], `${agent} ${tool}`).toBeTruthy();
+  it("keeps each agent's 'Load these skills' list in step with its skills binding at every level", () => {
+    for (const level of TOKEN_LEVELS) {
+      for (const agent of listItems("agents", level)) {
+        const loaded = loadAgent(agent, level);
+        const section = loaded.body.match(/## Load (?:these )?skills?\n([\s\S]*?)(?:\n## |$)/)?.[1] ?? "";
+        const listed = [...section.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]).filter((id) => SKILLS.includes(id));
+        expect([...new Set(listed)].sort(), `${agent} ${level}`).toEqual([...new Set(loaded.skills)].sort());
+      }
     }
   });
 });
 
-describe("model names match each harness", () => {
-  const patterns: Record<string, RegExp> = {
-    opencode: /^opencode\/[\w.-]+(#\w+)?$/,
-    claude: /^(sonnet|opus|haiku|fable|inherit|claude-[\w.-]+)$/,
-    codex: /^gpt-[\w.-]+$/,
-    gemini: /^gemini-[\w.-]+$/,
-    cursor: /^(inherit|[\w.-]+(\[[^\]]*\])?)$/,
-  };
-  // GitHub Copilot lists models by display name; these are the names from its supported-models table.
-  const githubModels = [
-    "GPT-6.1 Sol",
-    "GPT-6 Luna",
-    "Claude Haiku 5.5",
-    "Claude Opus 5.5",
-    "Claude Sonnet 5.5",
-  ];
-  it("uses valid model names per harness for every agent", () => {
+describe("agent metadata", () => {
+  it("gives every agent an icon and inherits the session model", () => {
     for (const agent of AGENTS) {
-      const models = loadAgent(agent).models;
-      for (const tool of Object.keys(patterns)) {
-        expect(models[tool], `${agent} ${tool}`).toMatch(patterns[tool]);
-      }
-      expect(githubModels, `${agent} github`).toContain(models.github);
+      expect(loadAgent(agent).icon, `${agent} icon`).toBeTruthy();
+      expect(loadAgent(agent).model, `${agent} model`).toBe("inherit");
+    }
+  });
+
+  it("lets the orchestrator delegate to every other agent, and devops-engineer to its reviewers", () => {
+    const delegates = (agent: string) =>
+      loadAgent(agent)
+        .permissions.filter((rule) => rule.action === "subagent" && rule.effect === "allow")
+        .map((rule) => rule.resource)
+        .sort();
+    expect(delegates("orchestrator")).toEqual(AGENTS.filter((agent) => agent !== "orchestrator").sort());
+    expect(delegates("devops-engineer")).toEqual(["code-reviewer", "qa-engineer", "security-reviewer"]);
+    for (const agent of AGENTS.filter((name) => name !== "orchestrator" && name !== "devops-engineer")) {
+      expect(delegates(agent), agent).toEqual([]);
     }
   });
 });
@@ -143,7 +152,8 @@ describe("rendering", () => {
   it("writes OpenCode agents with mode, model, and skill-scoped permissions", () => {
     const fm = frontmatterOf(rendered("opencode", "agents", "code-reviewer")[0].content);
     expect(fm.mode).toBe("subagent");
-    expect(fm.model).toBe("opencode/gpt-6.1-sol#high");
+    expect(fm).not.toHaveProperty("model");
+    expect(fm.description).toMatch(/^🔍 /);
     const perms = fm.permissions as { action: string; resource: string; effect: string }[];
     expect(perms).toContainEqual({ action: "skill", resource: "*", effect: "deny" });
     expect(perms).toContainEqual({ action: "skill", resource: "review-checklist", effect: "allow" });
@@ -153,7 +163,7 @@ describe("rendering", () => {
   it("writes Claude agents with name, native skills, and tool denials", () => {
     const reviewer = frontmatterOf(rendered("claude", "agents", "code-reviewer")[0].content);
     expect(reviewer.name).toBe("code-reviewer");
-    expect(reviewer.model).toBe("opus");
+    expect(reviewer.model).toBe("inherit");
     expect(reviewer.effort).toBe("high");
     expect(reviewer.skills).toContain("security-and-hardening");
     expect(reviewer.disallowedTools).toEqual(expect.arrayContaining(["Write", "Edit", "Agent"]));
@@ -166,7 +176,7 @@ describe("rendering", () => {
 
   it("writes Claude command models from the bound agent", () => {
     const fm = frontmatterOf(rendered("claude", "commands", "build")[0].content);
-    expect(fm.model).toBe("sonnet");
+    expect(fm.model).toBe("inherit");
     expect(fm.agent).toBeUndefined();
   });
 
@@ -175,7 +185,7 @@ describe("rendering", () => {
     expect(file.path).toBe(".codex/agents/code-reviewer.toml");
     const toml = parseToml(file.content) as Record<string, string>;
     expect(toml.name).toBe("code-reviewer");
-    expect(toml.model).toBe("gpt-6.1-sol");
+    expect(toml).not.toHaveProperty("model");
     expect(toml.model_reasoning_effort).toBe("high");
     expect(toml.developer_instructions).toContain("Do not edit files.");
   });
@@ -194,13 +204,13 @@ describe("rendering", () => {
     const command = parseToml(rendered("gemini", "commands", "spec")[0].content) as Record<string, string>;
     expect(command.description).toBeTruthy();
     expect(command.prompt).toContain("Do not implement");
-    expect(command.prompt).toContain("Persona: `product-owner`");
+    expect(command.prompt).toContain("Persona: `📋 product-owner`");
 
     const reviewer = frontmatterOf(rendered("gemini", "agents", "security-reviewer")[0].content);
     expect(reviewer.tools).toContain("read_file");
     expect(reviewer.tools).not.toContain("write_file");
     expect(reviewer.kind).toBe("local");
-    expect(reviewer.model).toBe("gemini-3-pro-preview");
+    expect(reviewer).not.toHaveProperty("model");
   });
 
   it("writes GitHub agents as .agent.md with tool aliases", () => {
@@ -208,8 +218,8 @@ describe("rendering", () => {
     expect(file.path).toBe(".github/agents/code-reviewer.agent.md");
     const fm = frontmatterOf(file.content);
     expect(fm.tools).toEqual(["read", "search", "execute"]);
-    expect(fm.model).toBe("GPT-6.1 Sol");
-    expect(rendered("github", "agents", "senior-developer")[0].content).toContain("edit");
+    expect(fm).not.toHaveProperty("model");
+    expect(rendered("github", "agents", "senior-backend-developer")[0].content).toContain("edit");
   });
 
   it("writes GitHub commands as skills that are not auto-invoked", () => {
@@ -220,7 +230,8 @@ describe("rendering", () => {
 
   it("writes Cursor agents with readonly reviewers and .mdc rules", () => {
     expect(frontmatterOf(rendered("cursor", "agents", "code-reviewer")[0].content).readonly).toBe(true);
-    expect(frontmatterOf(rendered("cursor", "agents", "senior-developer")[0].content)).not.toHaveProperty("readonly");
+    expect(frontmatterOf(rendered("cursor", "agents", "senior-backend-developer")[0].content)).not.toHaveProperty("readonly");
+    expect(frontmatterOf(rendered("cursor", "agents", "senior-backend-developer")[0].content).model).toBe("inherit");
     const rule = rendered("cursor", "rules", "global")[0];
     expect(rule.path).toBe(".cursor/rules/global.mdc");
     expect(frontmatterOf(rule.content).alwaysApply).toBe(true);
@@ -304,27 +315,40 @@ describe("install, update, and doctor", () => {
     const removed = join(dir, ".claude/agents/code-reviewer.md");
     expect(inspect(removed, "x")).toBe("missing");
 
-    const target = join(dir, ".claude/agents/senior-developer.md");
+    const target = join(dir, ".claude/agents/senior-backend-developer.md");
     writeFileSync(target, "stale\n", "utf8");
     const check = update(dir, ["claude"], { dryRun: true });
-    expect(check.conflicts).toContain(".claude/agents/senior-developer.md");
+    expect(check.conflicts).toContain(".claude/agents/senior-backend-developer.md");
     expect(readFileSync(target, "utf8")).toBe("stale\n");
     expect(check.skipped).toContain(".claude/agents/code-reviewer.md");
     expect(inspect(removed, "x")).toBe("missing");
 
     const applied = update(dir, ["claude"], { force: true });
-    expect(applied.overwritten).toContain(".claude/agents/senior-developer.md");
+    expect(applied.overwritten).toContain(".claude/agents/senior-backend-developer.md");
     expect(inspect(removed, "x")).toBe("missing");
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it("minimal preset includes the agents its commands need and only their skills", () => {
+  it("minimal preset includes agents needed by its commands and only their skills", () => {
     const items = kitItems("minimal");
     const agents = items.filter((i) => i.category === "agents").map((i) => i.name).sort();
-    expect(agents).toEqual(["product-owner", "senior-developer", "solution-architect"]);
+    expect(agents).toEqual([
+      "orchestrator",
+      "product-owner",
+      "qa-engineer",
+      "senior-backend-developer",
+      "senior-frontend-developer",
+      "solution-architect",
+    ]);
     const skills = items.filter((i) => i.category === "skills").map((i) => i.name);
     expect(skills).toContain("interview-me");
+    expect(skills).toContain("test-driven-development");
     expect(skills).not.toContain("security-and-hardening");
+
+    const lowItems = kitItems("minimal", "low");
+    expect(lowItems.filter((i) => i.category === "agents").map((i) => i.name)).toContain("qa-engineer");
+    const lowSkills = lowItems.filter((i) => i.category === "skills").map((i) => i.name);
+    for (const skill of loadAgent("qa-engineer", "low").skills) expect(lowSkills).toContain(skill);
   });
 
   it("doctor passes spec, plan, and test checks when artifacts exist", () => {
@@ -351,6 +375,98 @@ describe("install, update, and doctor", () => {
     const text = readFileSync(join(dir, ".opencode/commands/build.md"), "utf8");
     expect(text.startsWith("---\n")).toBe(true);
     expect(loadCommand("build").description).toBeTruthy();
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe("token-efficiency levels", () => {
+  const levelFiles = (level: TokenLevel) => planFiles(kitItems("full", level), ["claude"], level);
+
+  it("parses the level, defaults to default, and rejects unknown values", () => {
+    expect(parseLevel(undefined)).toBe("default");
+    expect(parseLevel("low")).toBe("low");
+    expect(parseLevel("high")).toBe("high");
+    expect(() => parseLevel("medium")).toThrow(/Unknown token-efficiency/);
+  });
+
+  it("ships the same agents, commands, and rules at every level, and fewer skills at low", () => {
+    for (const category of ["agents", "commands", "rules"] as const) {
+      expect(listItems(category, "high"), category).toEqual(listItems(category, "default"));
+      expect(listItems(category, "low"), category).toEqual(listItems(category, "default"));
+    }
+    expect(listItems("skills", "high")).toEqual(SKILLS);
+    expect(LOW_SKILLS.length).toBeLessThan(SKILLS.length);
+    expect(LOW_SKILLS.every((skill) => SKILLS.includes(skill))).toBe(true);
+  });
+
+  it("keeps low agents, commands, and the rule from naming skills that have no low version", () => {
+    const texts = [
+      ...LOW_AGENTS.map((agent) => readItem("agents", agent, "low")),
+      ...listItems("commands", "low").map((command) => readItem("commands", command, "low")),
+      readItem("rules", "global", "low"),
+    ];
+    const absent = SKILLS.filter((skill) => !LOW_SKILLS.includes(skill));
+    for (const text of texts) {
+      for (const skill of absent) expect(text, skill).not.toContain(`\`${skill}\``);
+    }
+  });
+
+  it("gives low agents only the low skills they bind, and every low skill is used", () => {
+    const bound = new Set(LOW_AGENTS.flatMap((agent) => loadAgent(agent, "low").skills));
+    for (const skill of bound) expect(LOW_SKILLS, skill).toContain(skill);
+    expect([...bound].sort()).toEqual([...LOW_SKILLS].sort());
+  });
+
+  it("writes low templates shorter than default, and default shorter than high", () => {
+    for (const agent of AGENTS) {
+      const low = readItem("agents", agent, "low").length;
+      const medium = readItem("agents", agent).length;
+      const high = readItem("agents", agent, "high").length;
+      expect(low, `${agent} low < default`).toBeLessThan(medium);
+      expect(medium, `${agent} default < high`).toBeLessThan(high);
+    }
+    for (const command of COMMANDS) {
+      expect(readItem("commands", command, "low").length, `${command} low`).toBeLessThan(
+        readItem("commands", command).length,
+      );
+    }
+    for (const skill of LOW_SKILLS) {
+      expect(readItem("skills", skill, "low").length, `${skill} low`).toBeLessThan(readItem("skills", skill).length);
+    }
+  });
+
+  it("installs low with plain file names and only the low set", () => {
+    const paths = levelFiles("low").map((file) => file.path);
+    expect(paths.some((path) => path.includes(".low"))).toBe(false);
+    expect(paths).toContain(".claude/agents/orchestrator.md");
+    expect(paths).toContain(".claude/skills/interview-me/SKILL.md");
+    expect(paths).not.toContain(".claude/skills/doubt-driven-development/SKILL.md");
+    expect(paths.filter((path) => path.startsWith(".claude/skills/")).length).toBe(LOW_SKILLS.length);
+  });
+
+  it("writes the low body under the plain file name", () => {
+    const orchestrator = levelFiles("low").find((file) => file.path === ".claude/agents/orchestrator.md");
+    expect(orchestrator?.content).toContain(loadAgent("orchestrator", "low").body.split("\n")[0]);
+  });
+
+  it("installs fewer files at low than at default, and default and high match in count", () => {
+    const low = levelFiles("low").length;
+    const medium = levelFiles("default").length;
+    const high = levelFiles("high").length;
+    expect(low).toBeLessThan(medium);
+    expect(high).toBe(medium);
+  });
+
+  it("refreshes a low install at low level without adding default-only files", () => {
+    const dir = tempProject();
+    const first = install(dir, kitItems("full", "low"), ["claude"], { level: "low" });
+    expect(first.conflicts).toHaveLength(0);
+    expect(inspect(join(dir, ".claude/skills/doubt-driven-development/SKILL.md"), "x")).toBe("missing");
+
+    const check = update(dir, ["claude"], { dryRun: true, level: "low" });
+    expect(check.conflicts).toHaveLength(0);
+    expect(check.skipped).toHaveLength(0);
+    expect(check.unchanged.length).toBe(first.created.length);
     rmSync(dir, { recursive: true, force: true });
   });
 });

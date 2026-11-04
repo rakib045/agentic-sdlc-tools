@@ -1,0 +1,25 @@
+---
+name: security-and-hardening
+description: "Hardens code that handles untrusted input, auth, sensitive data, uploads, webhooks, or dependencies. Use for any security-relevant change."
+---
+
+# Security and Hardening
+
+Treat every external input as hostile, every secret as sacred, and every authorization check as mandatory.
+
+## Process
+
+1. Map trust boundaries. Trust follows who wrote the value.
+2. Name the assets and STRIDE each boundary.
+
+## Three-tier boundary
+
+**Always:** validate at the boundary; parameterize queries; encode output; set security headers.
+
+**Ask first:** new auth flows, sensitive data, CORS changes, uploads.
+
+**Never:** commit or log secrets; trust client-side validation; use `eval` or raw HTML with user data; store auth tokens in localStorage.
+
+## Verification
+
+Each finding has `file:line`, impact, and a fix. Critical and High include an exploit scenario.

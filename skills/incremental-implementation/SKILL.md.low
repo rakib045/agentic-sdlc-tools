@@ -1,0 +1,27 @@
+---
+name: incremental-implementation
+description: "Implements changes in small, tested slices. Use when a change touches more than one file or for the next task on a plan."
+---
+
+# Incremental Implementation
+
+Build in thin slices. Implement, test, verify, commit, then expand.
+
+## Cycle
+
+1. Implement the smallest complete piece.
+2. Test first for new behavior (`test-driven-development`).
+3. Verify with focused tests, the full suite, and the build.
+4. Commit one logical change (`conventional-commits`), staging only this slice.
+5. Next slice. Never batch slices.
+
+## Rules
+
+- Always keep the tree buildable between slices.
+- One concern per slice. Never mix refactor, feature, and config.
+- New user-facing work ships behind a flag, default off.
+- About 100 changed lines is reviewable.
+
+## Verification
+
+Acceptance criteria pass, the build is green, and the commit holds only that slice.

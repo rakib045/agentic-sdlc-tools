@@ -6,30 +6,21 @@ subagent: false
 
 # /spec — Write a Specification
 
-Invoke `spec-driven-development`. If the ask is missing who, why, success, or the binding constraint, invoke `interview-me` first. If the idea is still a rough concept, invoke `idea-refine` before writing the spec.
+Invoke `spec-driven-development`. If who, why, success, or the binding constraint is missing, invoke `interview-me`. For a rough idea, invoke `idea-refine`.
 
-Do not implement. Do not start planning in this turn.
+Do not implement or plan in this turn.
 
 ## Steps
 
-1. Surface assumptions in a short numbered list. Correct them before writing.
-2. If the request bundles several independently testable capabilities, propose a capability map (stable kebab-case ids, one-way dependencies, build order) and wait for approval. Then spec each module in dependency order (`SPEC-<id>.md`). Single-capability work skips this step.
-3. Write a spec covering:
-   - Objective, users, and why now
-   - User stories with Given/When/Then acceptance criteria
-   - Commands (full commands, not tool names) — discover them from the repo
-   - Project structure and code style, with one real snippet if the repo has a convention
-   - Testing strategy
-   - Boundaries: always do / ask first / never do
-   - Success criteria (measurable), out of scope, open questions
-4. Reframe vague goals into testable conditions. "Faster" is not a criterion.
-5. Save or update `SPEC.md` (or `docs/spec.md`). If the project already uses another spec system, keep that format and still make `doctor` able to see a spec at `SPEC.md`, `spec.md`, or `docs/spec.md`.
-6. Summarize and list open questions. Ask for approval.
-7. **Stop.** Do not invoke planning or write code until the human approves in a later turn.
-8. CLI check after the file exists: `agentic-sdlc-tools doctor` — `spec` should PASS.
+1. List assumptions. Correct them first.
+2. If the request has several independent capabilities, propose a capability map and wait for approval. Spec each module in dependency order as `SPEC-<id>.md`.
+3. Write `SPEC.md` (or `docs/spec.md`): objective, users, Given/When/Then user stories, commands, testing strategy, boundaries (always / ask first / never), measurable success criteria, out of scope, open questions.
+4. Replace vague goals with testable conditions.
+5. Summarize open questions and ask for approval.
+6. **Stop** until the human approves.
+7. Run `agentic-sdlc-tools doctor`. `spec` should PASS.
 
 ## Rules
 
 - No implementation. Ambiguity is an open question, not a guess.
-- Do not treat a README as a spec.
-- Keep it minimal but complete.
+- A README is not a spec.

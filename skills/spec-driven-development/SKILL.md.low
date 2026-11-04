@@ -1,0 +1,28 @@
+---
+name: spec-driven-development
+description: "Writes a spec before implementation. Use when requirements are ambiguous or the work will take more than a short session."
+---
+
+# Spec-Driven Development
+
+Write a spec before code. The spec is the source of truth.
+
+## When to use
+
+Multi-module changes, new projects, or ambiguous requirements. Not for typos or unambiguous local changes.
+
+## Process
+
+1. Scope: if the request bundles several capabilities, propose a module map and wait for approval.
+2. Specify: objective, commands (from this repo), structure, style, testing, boundaries.
+3. Save to `SPEC.md` or `docs/spec.md`. Make requirements testable.
+4. **Stop.** Ask for approval. Do not plan or implement in this turn.
+
+## Red flags
+
+- Success criteria that cannot fail a test.
+- Open questions answered by the agent instead of the user.
+
+## Verification
+
+Spec exists and the user approved it. No product code was written.

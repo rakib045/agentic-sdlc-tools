@@ -1,0 +1,31 @@
+---
+description: Implements the next pending task from PLAN.md test-first, or runs every task with /build auto after one approval. Use when a spec and plan exist and code should be written.
+agent: orchestrator
+subagent: false
+---
+
+# /build — Implement the Plan
+
+Invoke `incremental-implementation` and `test-driven-development`. On failure, invoke `debugging-and-error-recovery`.
+
+## Default: one task
+
+1. Require `SPEC.md` or `docs/spec.md`. If missing, stop and run `/spec`.
+2. Read the next pending task in `PLAN.md`.
+3. Write a failing test (RED). Confirm it fails.
+4. Implement the minimum to pass (GREEN). Refactor.
+5. Run the full suite and build.
+6. Commit only this task's files. See `conventional-commits`.
+7. Mark the task complete and stop.
+
+## Autonomous: `/build auto`
+
+1. Present the full plan. Wait for an unambiguous yes.
+2. Run each task in order with the default loop. Never `git add -A`.
+3. Stop and ask when a test cannot pass or a step is irreversible.
+
+## Rules
+
+- No scope creep, secrets, dead code, or skipped tests.
+- For auth, migrations, payments, or deletions, get explicit sign-off first.
+- Verify by execution. Report real output.

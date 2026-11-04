@@ -1,4 +1,5 @@
-import type { Permission } from "../lib/source.js";
+import type { TokenLevel } from "../lib/manifest.js";
+import { loadAgent, type Permission } from "../lib/source.js";
 import { markdown, type RenderedFile } from "../lib/render.js";
 
 export type Capability = "allow" | "ask" | "deny" | "partial";
@@ -37,9 +38,20 @@ export function policyNotes(permissions: Permission[]): string[] {
   return notes;
 }
 
-export function withPersona(agent: string | undefined, body: string): string {
+/** Harnesses without an "inherit" value omit the model key, which also inherits the session model. */
+export function omitInherit(model: string): string | undefined {
+  return model === "inherit" ? undefined : model;
+}
+
+/** Icon-prefixed agent description, so every harness shows the same icon in its agent picker. */
+export function agentDescription(agent: { icon: string; description: string }): string {
+  return `${agent.icon} ${agent.description}`;
+}
+
+export function withPersona(agent: string | undefined, body: string, level: TokenLevel): string {
   if (!agent) return body;
-  return `Persona: \`${agent}\`. Apply that persona's responsibilities, working agreement, and output format.\n\n${body}`;
+  const { icon } = loadAgent(agent, level);
+  return `Persona: \`${icon} ${agent}\`. Apply that persona's responsibilities, working agreement, status updates, and output format.\n\n${body}`;
 }
 
 export function skillFile(

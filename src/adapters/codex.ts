@@ -1,6 +1,6 @@
 import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
 import { markdown, tomlValue } from "../lib/render.js";
-import { policyNotes, skillFile, withPersona } from "./shared.js";
+import { agentDescription, omitInherit, policyNotes, skillFile, withPersona } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
@@ -11,27 +11,28 @@ import type { ToolAdapter } from "./types.js";
 export const codexAdapter: ToolAdapter = {
   id: "codex",
   label: "OpenAI Codex",
-  render(category, name) {
+  render(category, name, level) {
     switch (category) {
       case "agents": {
-        const agent = loadAgent(name);
+        const agent = loadAgent(name, level);
         const notes = policyNotes(agent.permissions);
         const instructions = notes.length
           ? `${agent.body}\n\n## Tool policy\n${notes.map((note) => `- ${note}`).join("\n")}`
           : agent.body;
         const lines = [
           `name = ${tomlValue(name)}`,
-          `description = ${tomlValue(agent.description)}`,
+          `description = ${tomlValue(agentDescription(agent))}`,
           `developer_instructions = ${tomlValue(instructions)}`,
         ];
-        if (agent.models.codex) lines.push(`model = ${tomlValue(agent.models.codex)}`);
+        const model = omitInherit(agent.model);
+        if (model) lines.push(`model = ${tomlValue(model)}`);
         if (agent.effort) lines.push(`model_reasoning_effort = ${tomlValue(agent.effort)}`);
         return [{ path: `.codex/agents/${name}.toml`, kind: "toml", content: `${lines.join("\n")}\n` }];
       }
       case "commands": {
-        const command = loadCommand(name);
+        const command = loadCommand(name, level);
         return [
-          skillFile(".agents/skills", name, command.description, withPersona(command.agent, command.body)),
+          skillFile(".agents/skills", name, command.description, withPersona(command.agent, command.body, level)),
           {
             path: `.agents/skills/${name}/agents/openai.yaml`,
             kind: "yaml",
@@ -40,11 +41,11 @@ export const codexAdapter: ToolAdapter = {
         ];
       }
       case "skills": {
-        const skill = loadSkill(name);
+        const skill = loadSkill(name, level);
         return [skillFile(".agents/skills", name, skill.description, skill.body)];
       }
       case "rules":
-        return [{ path: "AGENTS.md", kind: "markdown", content: markdown({}, loadRule(name)) }];
+        return [{ path: "AGENTS.md", kind: "markdown", content: markdown({}, loadRule(name, level)) }];
     }
   },
   doctorPaths: () => ["AGENTS.md"],

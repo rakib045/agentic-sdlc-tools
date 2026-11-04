@@ -1,0 +1,36 @@
+---
+name: conventional-commits
+description: "Writes Conventional Commits for code changes. Use when committing or opening a PR."
+---
+
+# Conventional Commits
+
+Commits are save points. History is documentation.
+
+## When to use
+
+Any code change: committing or opening a PR.
+
+## Workflow
+
+- Commit each verified slice. One logical change per commit.
+- Stage only the files for that commit. Never `git add -A` on a dirty tree.
+- Do not rewrite published history. Do not commit secrets.
+
+## Message format
+
+```
+type: subject
+```
+
+Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`.
+
+- Imperative subject, under 72 characters, no trailing period.
+
+## Red flags
+
+- Secrets, build output, or unrelated files in the commit.
+
+## Verification
+
+`git status` is clean for the intended scope, and the subject matches the format above.

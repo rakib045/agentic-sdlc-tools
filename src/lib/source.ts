@@ -1,5 +1,5 @@
 import { parse } from "yaml";
-import { readItem } from "./manifest.js";
+import { readItem, type TokenLevel } from "./manifest.js";
 
 export type Effect = "allow" | "ask" | "deny";
 
@@ -13,10 +13,11 @@ export type AgentMode = "primary" | "subagent" | "all";
 
 export interface AgentSource {
   id: string;
+  icon: string;
   description: string;
   mode: AgentMode;
   effort?: string;
-  models: Record<string, string>;
+  model: string;
   skills: string[];
   permissions: Permission[];
   body: string;
@@ -57,26 +58,28 @@ function requireDescription(fields: Record<string, unknown>, label: string): str
   return value.trim();
 }
 
-export function loadAgent(id: string): AgentSource {
+export function loadAgent(id: string, level: TokenLevel = "default"): AgentSource {
   const label = `agents/${id}`;
-  const { fields, body } = parseSource(readItem("agents", id), label);
+  const { fields, body } = parseSource(readItem("agents", id, level), label);
   const mode = (fields.mode ?? "all") as AgentMode;
   if (!MODES.includes(mode)) throw new Error(`${label}: "mode" must be one of ${MODES.join(", ")}`);
+  if (typeof fields.icon !== "string" || fields.icon.trim() === "") throw new Error(`${label}: missing "icon"`);
   return {
     id,
+    icon: fields.icon.trim(),
     description: requireDescription(fields, label),
     mode,
     effort: typeof fields.effort === "string" ? fields.effort : undefined,
-    models: (fields.models ?? {}) as Record<string, string>,
+    model: typeof fields.model === "string" ? fields.model : "inherit",
     skills: (fields.skills ?? []) as string[],
     permissions: (fields.permissions ?? []) as Permission[],
     body,
   };
 }
 
-export function loadCommand(id: string): CommandSource {
+export function loadCommand(id: string, level: TokenLevel = "default"): CommandSource {
   const label = `commands/${id}`;
-  const { fields, body } = parseSource(readItem("commands", id), label);
+  const { fields, body } = parseSource(readItem("commands", id, level), label);
   return {
     id,
     description: requireDescription(fields, label),
@@ -86,14 +89,14 @@ export function loadCommand(id: string): CommandSource {
   };
 }
 
-export function loadSkill(id: string): SkillSource {
+export function loadSkill(id: string, level: TokenLevel = "default"): SkillSource {
   const label = `skills/${id}`;
-  const { fields, body } = parseSource(readItem("skills", id), label);
+  const { fields, body } = parseSource(readItem("skills", id, level), label);
   return { id, description: requireDescription(fields, label), body };
 }
 
-export function loadRule(id: string): string {
-  return parseSource(readItem("rules", id), `rules/${id}`).body;
+export function loadRule(id: string, level: TokenLevel = "default"): string {
+  return parseSource(readItem("rules", id, level), `rules/${id}`).body;
 }
 
 export function parseFrontmatter(raw: string): Record<string, unknown> {

@@ -1,0 +1,36 @@
+---
+name: code-review-and-quality
+description: "Five-axis code review before merge. Use before merging any change or when running /code-review."
+---
+
+# Code Review and Quality
+
+Severity labels. Tests first.
+
+## When to use
+
+Before merging, or when `/code-review` runs. Use `review-checklist` as the short gate.
+
+## Axes
+
+1. **Correctness.** Matches spec; tests prove behavior.
+2. **Readability.** Easy to follow.
+3. **Architecture.** Existing patterns hold.
+4. **Security.** Load `security-and-hardening` for input, auth, or data.
+5. **Performance.** No invented metrics.
+
+## Process
+
+1. Read the tests first. Would a flipped condition fail them?
+2. Read the implementation. Propose a structural fix.
+3. Label findings Critical, Required, Optional, or Nit. Critical and Required need `file:line` and a fix.
+4. Confirm tests ran and no suppressions or lowered thresholds were added. If tests did not run, say so. Do not approve to be agreeable.
+
+## Red flags
+
+- Approval with failing or missing tests.
+- Findings with no location.
+
+## Verification
+
+A verdict (Approve or Request changes), findings by severity, and what you ran.

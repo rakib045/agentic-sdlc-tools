@@ -1,0 +1,19 @@
+---
+description: Writes or updates SPEC.md with user stories, acceptance criteria, and boundaries, then stops for approval. Use when requirements are new or unclear and no approved spec exists.
+agent: product-owner
+subagent: false
+---
+
+# /spec — Write a Specification
+
+Invoke `spec-driven-development`. If the ask is unclear, invoke `interview-me`.
+
+1. List assumptions and correct them.
+2. Write `SPEC.md`: Given/When/Then stories, boundaries, measurable success criteria, open questions.
+3. Ask for approval. **Stop** until approved.
+4. Run `agentic-sdlc-tools doctor`. `spec` should PASS.
+
+## Rules
+
+- No implementation. Ambiguity is an open question, not a guess.
+- A README is not a spec.

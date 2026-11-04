@@ -1,6 +1,6 @@
 import { loadAgent, loadCommand, loadRule, loadSkill } from "../lib/source.js";
 import { markdown } from "../lib/render.js";
-import { skillFile } from "./shared.js";
+import { agentDescription, omitInherit, skillFile } from "./shared.js";
 import type { ToolAdapter } from "./types.js";
 
 /**
@@ -10,10 +10,10 @@ import type { ToolAdapter } from "./types.js";
 export const opencodeAdapter: ToolAdapter = {
   id: "opencode",
   label: "OpenCode",
-  render(category, name) {
+  render(category, name, level) {
     switch (category) {
       case "agents": {
-        const agent = loadAgent(name);
+        const agent = loadAgent(name, level);
         const skillRules = [
           { action: "skill", resource: "*", effect: "deny" },
           ...agent.skills.map((skill) => ({ action: "skill", resource: skill, effect: "allow" })),
@@ -24,9 +24,9 @@ export const opencodeAdapter: ToolAdapter = {
             kind: "markdown",
             content: markdown(
               {
-                description: agent.description,
+                description: agentDescription(agent),
                 mode: agent.mode,
-                model: agent.models.opencode,
+                model: omitInherit(agent.model),
                 permissions: [...skillRules, ...agent.permissions],
               },
               agent.body,
@@ -35,7 +35,7 @@ export const opencodeAdapter: ToolAdapter = {
         ];
       }
       case "commands": {
-        const command = loadCommand(name);
+        const command = loadCommand(name, level);
         return [
           {
             path: `.opencode/commands/${name}.md`,
@@ -48,11 +48,11 @@ export const opencodeAdapter: ToolAdapter = {
         ];
       }
       case "skills": {
-        const skill = loadSkill(name);
+        const skill = loadSkill(name, level);
         return [skillFile(".opencode/skills", name, skill.description, skill.body)];
       }
       case "rules":
-        return [{ path: "AGENTS.md", kind: "markdown", content: markdown({}, loadRule(name)) }];
+        return [{ path: "AGENTS.md", kind: "markdown", content: markdown({}, loadRule(name, level)) }];
     }
   },
   doctorPaths: () => ["AGENTS.md"],

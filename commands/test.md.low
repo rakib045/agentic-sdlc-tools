@@ -1,0 +1,20 @@
+---
+description: Writes failing tests first, applies the Prove-It pattern to bugs, or assesses coverage gaps. Use when adding behavior, fixing a bug, or checking test quality.
+agent: qa-engineer
+subagent: false
+---
+
+# /test — Prove It Works
+
+Invoke `test-driven-development`. If the failure is not understood, invoke `debugging-and-error-recovery`.
+
+1. Write a test for the expected behavior. It must fail.
+2. Implement the minimum to pass. Refactor while green.
+3. Run the full suite. Report real output.
+
+For a bug, first write a test that reproduces it and fails on current code. Fix the root cause.
+
+## Rules
+
+- A test that cannot fail is not a test. Never delete or weaken a test to get green.
+- Never mark untested behavior as done.

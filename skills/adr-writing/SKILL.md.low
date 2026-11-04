@@ -1,0 +1,27 @@
+---
+name: adr-writing
+description: "Records expensive-to-reverse decisions as ADRs. Use when choosing a framework, data model, auth, API style, hosting, or a public contract change."
+---
+
+# ADR Writing
+
+Record the why.
+
+## When to use
+
+Framework, data model, auth, API style, hosting, or public contract change.
+
+## Format
+
+Follow any existing repo ADR format. Otherwise store in `docs/adr/NNNN-title.md` with Status, Date, Context, Decision, Consequences, and Alternatives considered.
+
+Link the ADR from `PLAN.md` when the plan depends on it.
+
+## Red flags
+
+- No alternatives listed.
+- Docs that describe the diff instead of current behavior.
+
+## Verification
+
+Status is set and the ADR is linked from the plan or change.

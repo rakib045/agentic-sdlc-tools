@@ -1,0 +1,35 @@
+---
+name: api-and-interface-design
+description: "Designs APIs, module boundaries, public types, and events as stable contracts. Use when adding or changing an API, boundary, or event."
+---
+
+# API and Interface Design
+
+Design the contract before the implementation.
+
+## When to use
+
+A new or changed API, boundary, type, or event.
+
+## Principles
+
+- **Hyrum's Law.** Observable behavior becomes a dependency.
+- **Contract first.** Define request, response, and errors first.
+- **Stable errors.** Callers branch on codes.
+- **Prefer addition.** Removing or renaming is breaking.
+
+## Process
+
+1. Name the callers.
+2. Draft inputs, outputs, errors, and authz. Validate at the boundary.
+3. Record breaking changes as an ADR (`adr-writing`).
+4. Test the contract.
+
+## Red flags
+
+- Breaking change with no migration note.
+- Validation only in the UI.
+
+## Verification
+
+Contract written down, boundary tests pass, breaking changes have an ADR.
