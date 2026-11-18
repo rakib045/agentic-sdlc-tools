@@ -1,0 +1,27 @@
+---
+description: Modifier flag for /orches-sdlc and /orches-sdlc-jira. Pass it with the command to skip the build acceptance and the PR question. Spec and plan approval still need the user. Use for unattended delivery once the scope is clear.
+agent: orchestrator
+subagent: false
+---
+
+# /no-human-review — Autonomous Mode Flag
+
+Add `/no-human-review` to `/orches-sdlc` or `/orches-sdlc-jira`. Open every reply with `🧭 orchestrator`.
+
+## What changes
+
+- Spec approval and plan agreement still need the user.
+- Build acceptance is automatic once every review approves.
+- The PR is created automatically if a git host is connected. Otherwise show the title and description.
+
+## Still stops for you
+
+- a missing Atlassian connection, a failing test, a review still open after 3 rounds, or an ambiguous spec.
+
+## Never
+
+- merge, release, or push to the default branch.
+
+## If run on its own
+
+Ask the user for a feature description or a Jira card. Then run that flow with the flag applied.

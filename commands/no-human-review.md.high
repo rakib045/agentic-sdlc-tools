@@ -1,0 +1,48 @@
+---
+description: Modifier flag for /orches-sdlc and /orches-sdlc-jira. Pass it with the command to skip the build acceptance and the PR question, and create the PR automatically when a git host is connected. Spec and plan approval still need the user. Use for unattended delivery once the scope is clear.
+agent: orchestrator
+subagent: false
+---
+
+# /no-human-review — Autonomous Mode Flag
+
+Add `/no-human-review` to one of these commands:
+
+- `/orches-sdlc <feature description> /no-human-review`
+- `/orches-sdlc-jira <PROJ-123 or URL> /no-human-review`
+
+The flag can appear anywhere in the arguments. Match it case-insensitively and ignore it when reading the feature description or the Jira key. Open every reply with `🧭 orchestrator`, and show the status board (agent, stage, state) at each step.
+
+Invoke `using-agent-skills` to confirm the workflow.
+
+## What changes, stage by stage
+
+| Stage | With the flag |
+|---|---|
+| 0. Jira card (`/orches-sdlc-jira` only) | Unchanged. Stops if the Atlassian MCP server is not connected |
+| 1. Spec | Still needs your approval |
+| 2. Plan and plan review | Still needs your agreement. Revisions repeat until you agree |
+| 3. Build | Unchanged. Unit tests first, one commit per task, frontend and backend tasks run in parallel when both are ready |
+| 4. Build review | Unchanged. Each task is reviewed by another agent of the same role, up to 3 rounds |
+| 5. Build acceptance | Automatic once every build review approves. The build is not presented for approval |
+| 6. PR description | Written as usual |
+| 7. PR decision | Automatic. If a git host is connected, `devops-engineer` creates the branch, commits the remaining changes, pushes, and opens the PR without asking. If no git host is connected, the title and description are shown and the run stops |
+
+## Still stops for you
+
+- an ambiguous spec, or a Jira card with missing information;
+- a missing Atlassian connection, when using `/orches-sdlc-jira`;
+- a failing test that cannot be fixed, after `debugging-and-error-recovery` has been tried;
+- a review still open after 3 rounds;
+- any irreversible step outside creating the PR.
+
+## Never, even with the flag
+
+- merging a pull request;
+- releasing or deploying to production;
+- pushing to the default branch;
+- committing files outside the current feature, or using `git add -A`.
+
+## If run on its own
+
+If `/no-human-review` is run without a feature description or a Jira card, ask the user which one to run. For a Jira card, ask for the key or URL and check the Atlassian connection first. Then run the matching flow with the flag applied, following the stages of `/orches-sdlc` or `/orches-sdlc-jira`.

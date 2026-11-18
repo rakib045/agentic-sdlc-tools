@@ -5,8 +5,7 @@ import type { ToolAdapter } from "./types.js";
 
 /**
  * Cursor: subagents in .cursor/agents/*.md (readonly for reviewers). Cursor ignores plain .md
- * rules, so rules are .mdc with alwaysApply. Slash commands are migrated to skills with
- * disable-model-invocation, which is Cursor's documented replacement.
+ * rules, so rules are .mdc with alwaysApply. Slash commands are plain markdown in .cursor/commands.
  */
 export const cursorAdapter: ToolAdapter = {
   id: "cursor",
@@ -30,9 +29,11 @@ export const cursorAdapter: ToolAdapter = {
       case "commands": {
         const command = loadCommand(name, level);
         return [
-          skillFile(".cursor/skills", name, command.description, withPersona(command.agent, command.body, level), {
-            "disable-model-invocation": true,
-          }),
+          {
+            path: `.cursor/commands/${name}.md`,
+            kind: "markdown",
+            content: markdown({}, withPersona(command.agent, command.body, level)),
+          },
         ];
       }
       case "skills": {
@@ -53,5 +54,5 @@ export const cursorAdapter: ToolAdapter = {
     }
   },
   doctorPaths: () => [".cursor/rules/global.mdc"],
-  describe: () => "cursor: agents=.cursor/agents commands=.cursor/skills (invocation off) skills=.cursor/skills/<id>/SKILL.md rules=.cursor/rules/global.mdc",
+  describe: () => "cursor: agents=.cursor/agents commands=.cursor/commands (<id>.md) skills=.cursor/skills/<id>/SKILL.md rules=.cursor/rules/global.mdc",
 };

@@ -1,0 +1,93 @@
+---
+description: Turns a bug, feature, or task description into a Jira-ready ticket. Runs spec with clarifying questions first, then creates the Jira issue through the Atlassian MCP server, or outputs the ticket text when Jira is not connected. Use to write a ticket before any build work starts.
+agent: orchestrator
+subagent: false
+---
+
+# /orches-create-jira — Create a Jira Ticket
+
+Usage: `/orches-create-jira <bug|feature|task> <description>`
+
+Open every reply with `🧭 orchestrator`. Show the status board (agent, stage, state) at each step, and the evidence behind each decision.
+
+Invoke `using-agent-skills` to confirm the workflow, and `spec-driven-development` to shape the spec. Use `interview-me` for the clarifying questions and `idea-refine` if the description is only a rough idea.
+
+Every line that names an agent uses that agent's icon:
+
+| Icon | Agent |
+|---|---|
+| 🧭 | orchestrator |
+| 📋 | product-owner |
+| 🧪 | qa-engineer |
+
+Status line formats:
+
+- Delegation: `🧭 orchestrator → 📋 product-owner ⏳ writing the spec`
+- Done: `📋 product-owner ✅ done`
+- Waiting: `🧭 orchestrator ⏸ waiting for you: answer the questions above`
+- Blocked: `🧭 orchestrator ⛔ blocked: no Jira project key`
+
+## Stage 0: Read the request
+
+1. The first word must be the type: `bug`, `feature`, or `task`. It is not case sensitive. If it is missing or not one of these, ask the user which type it is, and stop.
+2. The rest of the arguments is the description. If it is empty or too vague to write a title, ask for it, and stop.
+3. Map the type to a Jira issue type: `bug` to Bug, `feature` to Story, `task` to Task. Check the names against the project's Jira tools, because projects can rename or add issue types.
+4. Ignore `/no-human-review` when reading the description.
+
+## Stage 1: Spec and clarifying questions
+
+1. `product-owner` runs `/spec` with the description. It writes or updates `SPEC.md` and asks the clarifying questions. Ask at most 5 questions at a time, and ask only what a testable ticket needs:
+   - **bug:** steps to reproduce, actual output, expected output, environment, how often it happens, and how severe it is;
+   - **feature:** who it is for, the user story, how success is measured, boundaries, and what is out of scope;
+   - **task:** the outcome, the scope, and the definition of done.
+2. **Stop** until the user answers. Ask the next batch if anything essential is still open. Do not guess the answers to essential questions.
+3. Summarize the final spec and ask the user to confirm it before writing the ticket.
+
+## Stage 2: Draft the ticket
+
+Write the ticket for its type:
+
+- **Bug:**
+  - title, description, and the environment;
+  - steps to reproduce, numbered;
+  - actual output and expected output, each stated plainly;
+  - acceptance criteria that prove the fix and guard against a regression.
+- **Feature:**
+  - title and description as a user story (As a ..., I want ..., so that ...);
+  - acceptance criteria in Given/When/Then form;
+  - out of scope, and open questions.
+- **Task:**
+  - title and description;
+  - the steps or checklist;
+  - acceptance criteria or a definition of done.
+
+Add a diagram or flow wherever a process, sequence, state change, or integration is involved. Use Mermaid. If none is needed, write "No diagram needed."
+
+Never include secrets, credentials, tokens, or customer data in the ticket.
+
+## Stage 3: Jira connection check
+
+1. Check that the Atlassian MCP server is connected and that its Jira tools can create issues.
+2. **If connected:**
+   - Ask for the Jira project key if it is not known.
+   - Show the draft and ask the user to confirm it. Stop until they do.
+   - Create the issue with the issue type, title, and description.
+   - Show the issue key and link.
+3. **If not connected:** output the ticket as copy-paste markdown, in this order: title, type, description, diagram or flow, steps, actual and expected output (bugs), acceptance criteria, assumptions, and open questions. Tell the user they can connect the Atlassian MCP server to create the ticket directly. Stop.
+
+## Rules
+
+- Never create a ticket without confirmation, unless `/no-human-review` is set.
+- One ticket per request. Do not split or merge tickets without asking.
+- Every acceptance criterion is testable.
+- Open questions stay visible in the ticket, not hidden in the description.
+
+## No-human-review mode
+
+If the arguments include `/no-human-review`, this run is autonomous.
+
+- Ask a question only when the title or a testable acceptance criterion cannot be written without the answer. Every other open point becomes a stated assumption, listed in the ticket under "Assumptions".
+- Skip the spec confirmation and the draft confirmation.
+- If Jira is connected, create the issue without asking and show the key and link.
+- If Jira is not connected, output the ticket and stop.
+- Never change or delete an existing Jira issue.

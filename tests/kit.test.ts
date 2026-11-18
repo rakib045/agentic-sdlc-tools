@@ -49,7 +49,7 @@ describe("tools", () => {
 describe("manifest", () => {
   it("discovers the kit", () => {
     expect(AGENTS).toHaveLength(9);
-    expect(COMMANDS).toHaveLength(6);
+    expect(COMMANDS).toHaveLength(10);
     expect(SKILLS).toHaveLength(26);
     expect(manifest().rules).toEqual(["global"]);
   });
@@ -237,10 +237,10 @@ describe("rendering", () => {
     expect(frontmatterOf(rule.content).alwaysApply).toBe(true);
   });
 
-  it("writes Cursor commands as skills with invocation off", () => {
-    const fm = frontmatterOf(rendered("cursor", "commands", "plan")[0].content);
-    expect(fm["disable-model-invocation"]).toBe(true);
-    expect(rendered("cursor", "commands", "plan")[0].path).toBe(".cursor/skills/plan/SKILL.md");
+  it("writes Cursor commands to .cursor/commands with the persona applied", () => {
+    const file = rendered("cursor", "commands", "plan")[0];
+    expect(file.path).toBe(".cursor/commands/plan.md");
+    expect(file.content).toContain("Persona: `📐 solution-architect`");
   });
 
   it("uses each harness's skill directory", () => {

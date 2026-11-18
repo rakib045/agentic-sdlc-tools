@@ -1,0 +1,86 @@
+---
+description: Reads a Jira card by key or URL through the Atlassian MCP server, then runs the whole SDLC loop from that card. Spec, plan with review until the user agrees, build with unit tests and review, then an optional pull request. Use when the work is tracked in a Jira card.
+agent: orchestrator
+subagent: false
+---
+
+# /orches-sdlc-jira — Jira Card to Reviewed Code
+
+Open every reply with `🧭 orchestrator`. Start each agent line with that agent's icon:
+
+- 🧭 orchestrator, 📋 product-owner, 📐 solution-architect
+- 🎨 senior-frontend-developer, 🔧 senior-backend-developer
+- 🧪 qa-engineer, 🔍 code-reviewer, 🚀 devops-engineer
+
+Example: `🎨 senior-frontend-developer ⏳ task 3: login form tests`.
+
+Give each sub-agent a complete brief, including the Jira key. They cannot see this conversation. Automatic review rounds stop after 3. User gates have no limit.
+
+## No-human-review mode
+
+If the arguments include `/no-human-review`:
+
+- Spec approval and plan agreement still need the user.
+- Build acceptance is automatic once every review approves.
+- The PR is created automatically if a git host is connected. Otherwise show the title and description.
+- Stop on a missing Atlassian connection, a failing test, a review still open after 3 rounds, or an ambiguous spec.
+- Never merge or push to the default branch.
+
+## Stage 0: Read the Jira card
+
+1. Check that the Atlassian MCP server is connected. If not, **stop** and tell the user to connect it, then run this command again.
+2. Take the Jira key (`PROJ-123`) or URL from the argument the user typed. If there is none, ask and stop.
+3. Read the card through the Atlassian MCP server: summary, description, acceptance criteria, comments. If it cannot be read, stop.
+4. Show a short summary of the card. Use it as the request for Stage 1.
+
+## Stage 1: Spec
+
+1. `product-owner` runs `/spec` from the card and writes `SPEC.md`.
+2. **Stop.** Ask the user to approve the spec.
+
+## Stage 2: Plan and plan review
+
+1. `solution-architect` runs `/plan` and writes `PLAN.md`.
+2. `product-owner` checks the plan against `SPEC.md`. Every acceptance criterion needs a task. Report `approve` or the changes needed.
+3. Fix and re-check the plan, up to 3 rounds.
+4. **Stop.** Ask the user: agree, or request changes.
+5. On changes, revise the plan and repeat from step 2 until the user agrees.
+
+## Stage 3: Build
+
+1. Frontend tasks go to `senior-frontend-developer`. Backend tasks go to `senior-backend-developer`.
+2. Ready frontend and backend tasks can run at the same time. Two tasks that touch the same file never run together.
+3. Each task: write unit tests first, then the code that passes them. Run the suite.
+4. One commit per task. Never `git add -A`.
+
+## Stage 4: Build review
+
+1. Frontend tasks are reviewed by another `senior-frontend-developer`. Backend tasks are reviewed by another `senior-backend-developer`.
+2. Report `approve` or numbered issues. Fix and re-check, up to 3 rounds.
+
+## Stage 5: Confirm the build
+
+1. Show the tasks done, the unit tests added, the review verdicts, and the test output.
+2. **Stop.** Ask the user: accept, or request changes. With no-human-review, skip this stop when all reviews approved.
+3. On changes, add them to `PLAN.md` as tasks and repeat Stages 3 to 5.
+4. On acceptance, go to Stage 6.
+
+## Stage 6: Pull request description
+
+1. Write a PR title starting with the Jira key, and a body: summary, changes, acceptance criteria and how each was checked, unit tests, review outcome, open questions.
+2. Keep it ready for Stage 7.
+
+## Stage 7: Git check and pull request
+
+1. Check whether the project is connected to GitHub, GitLab, or Azure DevOps, by git remote or by MCP.
+2. If not connected, show the title and description and stop.
+3. If connected, **stop** and ask: create a pull request? yes or no. With no-human-review, answer yes without asking.
+4. If no, show the title and description and stop.
+5. If yes, `devops-engineer` 🚀 creates a branch, commits the remaining changes, pushes, and opens the PR. It never merges.
+6. Show the PR link.
+
+## Rules
+
+- Never skip a user gate.
+- Stop and ask on an ambiguous spec or an irreversible step.
+- Report real test output.
